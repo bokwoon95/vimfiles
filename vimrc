@@ -530,7 +530,7 @@ let NERDTreeMapPreview='<M-k>'
 let NERDTreeWinSize=32
 "}}}
 "{{{ CtrlP
-let g:ctrlp_map = '<NOP>'
+let g:ctrlp_map = ''
 let g:ctrlp_working_path_mode = 'rw'
 let g:ctrlp_show_hidden = 1
 let g:ctrlp_max_files=0
