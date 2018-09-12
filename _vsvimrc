@@ -1,0 +1,77 @@
+let mapleader="\<Space>"
+
+set ignorecase smartcase
+set incsearch
+
+nnoremap j gj
+nnoremap k gk
+noremap <C-j> 5gj
+noremap <C-k> 5gk
+noremap <C-h> 4<C-y>
+noremap <C-l> 4<C-e>
+noremap <Tab> %
+noremap M %
+noremap H g^
+nnoremap L g$
+nnoremap L g$
+onoremap L $
+nnoremap <Leader>ss :%s//g
+xnoremap <Leader>ss :s//g
+noremap - "_
+noremap = "+
+noremap Y "+y
+nnoremap YY "+yy
+nnoremap yal mz^yg_`z
+nnoremap Yal mz^"+yg`z
+vnoremap <C-c> "+y
+nnoremap Q @q
+
+cnoremap <C-[> <Esc>
+nnoremap <Leader>ri mzgg=G`zzz
+nnoremap [<Space> mzO<Esc>`z
+nnoremap ]<Space> mzo<Esc>`z
+
+"Insert Mode mappings
+inoremap <C-k> <Esc>`^Da
+inoremap <C-u> <Esc>vg^c
+inoremap <C-m> <CR>
+"inoremap <C-M-BS> <Esc>`^:vsc Edit.DeleteToBOL<CR>
+    "C-M-BS doesn't work in VsVim, bind this manually inside VS Studio
+
+" VS Studio Native Commands
+nnoremap gd :vsc Edit.GoToDefinition<CR>
+nnoremap <C-o> :vsc View.NavigateBackward<CR>
+nnoremap <C-m> :vsc View.NavigateForward<CR>
+nnoremap <C-q> :vsc Window.PreviousTab<CR>
+nnoremap <C-s> :vsc Window.NextTab<CR>
+nnoremap <Leader>tc :vsc Window.CloseDocumentWindow<CR>
+nnoremap <Leader>rf :vsc Refactor.Rename<CR>
+
+" Requires ToggleComment extension
+nnoremap gcc :vsc Edit.ToggleComment<CR>
+vnoremap gc :vsc Edit.ToggleComment<CR><Esc><Esc>
+
+" Unbind View.NextTask from <C-S-F12> (so that VsVim can handle it)
+"
+" List of keys to be handled by VsVim
+" -----------------------------------
+" C-[
+" C-r
+" C-hjkl
+" C-cv
+" C-um
+" C-oqs
+" C-w
+"
+" Problematic Keys to bind & unbind for _vsvimrc to work
+" ------------------------------------------------------
+" C-k
+"     Edit.CompleteWord
+"     Edit.ListMembers
+"     Edit.ParameterInfo
+"     Edit.QuickInfo
+"
+" Native VS Studio keymaps
+" ------------------------
+" C-M-BS bind to Edit.DeleteToBOL
+" M-w bind to Window.CloseDocumentWindow
