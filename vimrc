@@ -521,8 +521,8 @@ let NERDTreeAutoDeleteBuffer=1 "auto-delete buffers that have been renamed, move
 let NERDTreeMouseMode=3 "directories need one click to open
 let NERDTreeMinimalUI=1 "hide '?' and 'bookmarks' label
 let NERDTreeCascadeSingleChildDir=1
-let g:NERDTreeDirArrowExpandable = '>'
-let g:NERDTreeDirArrowCollapsible = '∨'
+"let g:NERDTreeDirArrowExpandable = '>'
+"let g:NERDTreeDirArrowCollapsible = '∨'
 let NERDTreeHijackNetrw=1
 let NERDTreeMapJumpPrevSibling='<C-p>'
 let NERDTreeMapJumpNextSibling='<C-n>'
@@ -530,7 +530,7 @@ let NERDTreeMapPreview='<M-k>'
 let NERDTreeWinSize=32
 "}}}
 "{{{ CtrlP
-let g:ctrlp_map = '<NOP>'
+let g:ctrlp_map = ''
 let g:ctrlp_working_path_mode = 'rw'
 let g:ctrlp_show_hidden = 1
 let g:ctrlp_max_files=0
