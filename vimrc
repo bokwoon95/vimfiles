@@ -1,4 +1,6 @@
 silent! execute pathogen#infect()
+syntax on
+filetype plugin indent on
 set encoding=utf-8
 scriptencoding utf-8
 set fileencoding=utf-8
