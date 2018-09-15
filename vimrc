@@ -632,8 +632,9 @@ command! Spa setlocal paste
 command! Sna setlocal nopaste
 " Custom keybindings (:h normal-index for defaults) (:map <key> to check key's current mapping)
 inoremap jk <Esc>`^| "doesn't work in terminal vim (see "Terminal Vim Settings" section)
-nnoremap <Leader>vv :e<Space>$MYVIMRC<CR>
-nnoremap <Leader>sv :source<Space>$MYVIMRC<CR>
+nnoremap <Leader>vv :e $MYVIMRC<CR>
+nnoremap <Leader>sv :source $MYVIMRC<CR>
+nnoremap <C-]> <NOP>
 "{{{ Saner Defaults
 "Disable uncommonly used Ex mode, bind Q to something more useful
 nnoremap Q @q
@@ -727,7 +728,6 @@ nnoremap cr :call ChangeReg()<CR>| "cr<register alphabet> to edit the register
 nnoremap <BS> <C-^>| "Backspace switches between alternate buffers
 nnoremap <M-BS> <C-^>
 nnoremap <C-BS> <C-^>
-inoremap <C-BS> <Esc><C-^>
 nnoremap <M-q> @q
 " xnoremap <Leader>ttt :s/\v<\a/\u&/g<CR>| " Fast and dirty titlecasing
   "^basic titlecase (does not work on anything other than all small caps)
