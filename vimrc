@@ -7,6 +7,55 @@ set fileencoding=utf-8
 
 let mapleader = "\<Space>"
 
+"{{{ Meta for Terminal Vim
+if !has("gui_running") && !has('nvim')
+  "Bind selected meta for selected keys: dbfnp<BS> hjkl vecyq
+  silent! exe "set <S-Left>=\<Esc>b"
+  silent! exe "set <S-Right>=\<Esc>f"
+  silent! exe "set <F31>=\<Esc>d"| "M-d
+  map! <F31> <M-d>
+  map <F31> <M-d>
+  silent! exe "set <F32>=\<Esc>n"| "M-n
+  map! <F32> <M-n>
+  map <F32> <M-n>
+  silent! exe "set <F33>=\<Esc>p"| "M-p
+  map! <F33> <M-p>
+  map <F33> <M-p>
+  silent! exe "set <F34>=\<Esc>\<C-?>"| "M-BS
+  map! <F34> <M-BS>
+  map <F34> <M-BS>
+  silent! exe "set <F35>=\<Esc>\<C-H>"| "M-BS
+  map! <F35> <M-BS>
+  map <F35> <M-BS>
+  silent! exe "set <F13>=\<Esc>h"| "M-h
+  map! <F13> <M-h>
+  map <F13> <M-h>
+  silent! exe "set <F14>=\<Esc>j"| "M-j
+  map! <F14> <M-j>
+  map <F14> <M-j>
+  silent! exe "set <F15>=\<Esc>k"| "M-k
+  map! <F15> <M-k>
+  map <F15> <M-k>
+  silent! exe "set <F16>=\<Esc>l"| "M-l
+  map! <F16> <M-l>
+  map <F16> <M-l>
+  silent! exe "set <F17>=\<Esc>v"| "M-v
+  map! <F17> <M-v>
+  map <F17> <M-v>
+  silent! exe "set <F18>=\<Esc>e"| "M-e
+  map! <F18> <M-e>
+  map <F18> <M-e>
+  silent! exe "set <F19>=\<Esc>c"| "M-c
+  map! <F19> <M-c>
+  map <F19> <M-c>
+  silent! exe "set <F20>=\<Esc>y"| "M-y
+  map! <F20> <M-y>
+  map <F20> <M-y>
+  silent! exe "set <F21>=\<Esc>q"| "M-q
+  map! <F21> <M-q>
+  map <F21> <M-q>
+endif
+"}}}
 "{{{ Hardcoded defaults
 "{{{ moll/vim-bbye
 function! s:bdelete(action, bang, buffer_name)
@@ -570,7 +619,7 @@ xmap ga <Plug>(EasyAlign)
 nmap ga <Plug>(EasyAlign)
 "}}}
 "{{{ indentLine
-let g:indentLine_enabled=0
+let g:indentLine_enabled=1
 let g:indentLine_faster=1
 let g:indentLine_char='¦'
 nnoremap <Leader>il :IndentLinesToggle<CR>
@@ -602,13 +651,15 @@ set wrap linebreak                  " Soft-wrap long lines without breaking word
 set display+=lastline               " display partial lines that have been wrapped
 set showcmd                         " Show commands in minibuffer
 set ignorecase smartcase            " Ignore case when searching, unless capitals are used
-setlocal ts=8 sw=4 sts=4 et         " Use soft tabs
+setlocal ts=4 sw=4 sts=4 et         " Use soft tabs
 set mouse=a                         " Enable mouse in terminal
-set list listchars=tab:▸\ ,trail:·  " ,eol:¬
+setlocal list                       " Show hidden characters
+set listchars=tab:\|\ ,trail:·      " ,eol:¬
 set foldopen-=block                 " Prevent { & } from opening folds
 set breakindent                     " wrapped lines keep same level of indent visually
 set fillchars+=vert:│               " Vertical bar separator
 set matchpairs+=<:>                 " % can jump between <,> pairs
+set whichwrap+=[,],<,>              " <Left> & <Right> keys will wrap to prev/next line
 set autoread                        " Reload files if they have been changed externally
 autocmd! FocusGained,BufEnter * checktime " To trigger vim's autoread on focus gained or buffer enter
 autocmd! Filetype vim setlocal foldmethod=marker
@@ -671,19 +722,19 @@ onoremap <silent> <expr> j gj
 noremap <expr> <CR> bufname("") == "[Command Line]" ? "<CR>"  :
                   \ v:count == 0                    ? "<Tab>" : "Gzz"
 if !empty(globpath(&rtp, 'autoload/smooth_scroll.vim'))
-  if has('gui_running')
-    nnoremap <silent> <C-d> :call Smooth_scroll_down(&scroll, 5, 2)<CR>
-    nnoremap <silent> <C-a> :call Smooth_scroll_up(&scroll, 5, 2)<CR>
-    nnoremap <silent> <C-u> :call Smooth_scroll_up(&scroll, 5, 2)<CR>
-    nnoremap <silent> <C-h> :call Smooth_scroll_up(4, 5, 1)<CR>
-    nnoremap <silent> <C-l> :call Smooth_scroll_down(4, 5, 1)<CR>
-  else
-    " nnoremap <silent> <C-d> :call smooth_scroll#down(&scroll, 2, 2)<CR>
-    " nnoremap <silent> <C-a> :call smooth_scroll#up(&scroll, 2, 2)<CR>
-    " nnoremap <silent> <C-u> :call smooth_scroll#up(&scroll, 2, 2)<CR>
-    " nnoremap <silent> <C-h> :call smooth_scroll#up(4, 2, 1)<CR>
-    " nnoremap <silent> <C-l> :call smooth_scroll#down(4, 2, 1)<CR>
-  endif
+if has('gui_running')
+	nnoremap <silent> <C-d> :call Smooth_scroll_down(&scroll, 5, 2)<CR>
+	nnoremap <silent> <C-a> :call Smooth_scroll_up(&scroll, 5, 2)<CR>
+	nnoremap <silent> <C-u> :call Smooth_scroll_up(&scroll, 5, 2)<CR>
+	nnoremap <silent> <C-h> :call Smooth_scroll_up(4, 5, 1)<CR>
+	nnoremap <silent> <C-l> :call Smooth_scroll_down(4, 5, 1)<CR>
+else
+	" nnoremap <silent> <C-d> :call smooth_scroll#down(&scroll, 2, 2)<CR>
+	" nnoremap <silent> <C-a> :call smooth_scroll#up(&scroll, 2, 2)<CR>
+	" nnoremap <silent> <C-u> :call smooth_scroll#up(&scroll, 2, 2)<CR>
+	" nnoremap <silent> <C-h> :call smooth_scroll#up(4, 2, 1)<CR>
+	" nnoremap <silent> <C-l> :call smooth_scroll#down(4, 2, 1)<CR>
+endif
 endif
 "}}}
 "{{{ Macros
@@ -888,6 +939,8 @@ function! s:BlankDown(count) abort
 endfunction
 nnoremap <silent> [<Space> :<C-U>call <SID>BlankUp(v:count1)<CR>
 nnoremap <silent> ]<Space> :<C-U>call <SID>BlankDown(v:count1)<CR>
+
+"Settings
 nnoremap [ol :setlocal list<CR>
 nnoremap ]ol :setlocal nolist<CR>
 nnoremap [oh :setlocal hlsearch<CR>
@@ -940,68 +993,99 @@ inoreabbr \date\ <C-r>=strftime("%d-%b-%Y")<CR><C-r>=Eatchar('\m\s\<Bar>/')<CR>
 "}}}
 
 " Set swap & undo file directory
-" if isdirectory(expand("~/.vim/.swp"))
-"   set directory^=~/.vim/.swp//
+" if isdirectory(expand("$HOME/vimfiles/.swp"))
+"   set directory^=$HOME/vimfiles/.swp//
 " endif
 set noswapfile
-" if isdirectory(expand("~/.vim/.undo"))
+" if isdirectory(expand("$HOME/vimfiles/.undo"))
 "   set undofile
-"   set undodir^=~/.vim/.undo//
+"   set undodir^=$HOME/vimfiles/.undo//
 "   set undolevels=100000 " Maximum number of undos
 "   set undoreload=100000 " Save complete files for undo on reload if it has fewer lines
 " endif
+" if isdirectory(expand("$HOME/vimfiles/.view"))
+"   set viewdir=$HOME/vimfiles/.view//
+" endif
+" fun! Makeview() abort
+" let viewfile = expand('%:p') . '.v'
+"   execute "mkview! ".viewfile
+"   :echo "saved view in ".viewfile
+" endfun
+" fun! Loadview() abort
+"   let viewfile = expand('%:p') . '.v'
+"   execute "silent! source ".viewfile
+"   :echo "loaded view from ".viewfile
+" endfun
+" command! MKV call Makeview()
+" command! LDV call Loadview()
+" augroup FoldSave
+"   autocmd!
+"   au BufWrite,VimLeave *.py call Makeview()
+"   au BufRead *.py silent! call Loadview()
+" augroup END
 
-"{{{ Autocommands
-augroup filetypes
+"{{{ MyHighlights
+function! MyHighlights() abort
+  hi Visual ctermbg=10 ctermfg=0
+  hi DiffAdd cterm=none ctermfg=232 gui=none guifg=black
+  hi DiffChange cterm=none ctermfg=232 gui=none guifg=black
+  hi DiffDelete cterm=none ctermfg=232 gui=none guifg=black
+  hi DiffText cterm=none ctermfg=232 gui=none guifg=black
+  hi TabLineFill cterm=bold ctermbg=none gui=none guibg=bg
+  hi TabLineSel cterm=bold,underline ctermbg=0 ctermfg=7 guibg=bg guifg=black gui=bold,underline
+  hi TabLine cterm=none ctermbg=none ctermfg=246 guibg=bg guifg=#8787af gui=none
+  hi BufTabLineFill cterm=bold ctermbg=none guifg=#e4e4e4 guibg=#e4e4e4
+  hi BufTabLineHidden cterm=none ctermfg=246 guifg=#808080 guibg=#e4e4e4
+  hi BufTabLineActive cterm=none ctermfg=7 guifg=#000000 guibg=#e4e4e4
+  hi BufTabLineCurrent cterm=bold,underline ctermbg=0 ctermfg=7 gui=underline guifg=#000000 guibg=#e4e4e4
+  hi Folded cterm=none ctermbg=none gui=none guibg=bg
+  hi Search term=underline ctermfg=0 ctermbg=6 guifg=black guibg=Cyan1
+  hi IncSearch cterm=none ctermfg=232 ctermbg=9
+  hi VertSplit cterm=none ctermfg=103 ctermbg=none gui=none guifg=#000000 guibg=#e4e4e4
+  hi EndOfBuffer ctermfg=0 guifg=bg
+  hi MatchParen cterm=underline ctermbg=none gui=underline guibg=bg
+  hi CursorLine cterm=none ctermbg=17
+  hi Cursor gui=reverse guibg=bg
+  hi StatusLine   ctermfg=233  ctermbg=103 cterm=bold gui=bold guibg=#bcbcbc
+  hi StatusLineNC ctermfg=103 ctermbg=none cterm=none,underline guibg=bg gui=underline
+endfunction
+augroup Autocommands
   autocmd!
+  autocmd ColorScheme * call MyHighlights()
   autocmd BufReadPost * call setpos(".", getpos("'\""))
-  autocmd Filetype markdown,md setlocal nonumber
-  autocmd Filetype lisp,javascript,verilog,zsh,html setlocal ts=2 sw=2 sts=2 et
-  autocmd Filetype java setlocal ts=4 sw=4 sts=4 et
-  autocmd Filetype javascript inoremap <C-q><C-q> console.log();<Left><Left>
-  autocmd Filetype python inoremap <C-q><C-q> print()<Left>
-  autocmd Filetype java inoremap <C-q><C-q> System.out.println();<Left><Left>
-  autocmd Filetype java inoremap <C-q><C-w> System.out.println()<Left>
-  autocmd Filetype java inoremap <C-q><C-a> public static void main(String[] args){<CR>}<Up><End><CR>
-  autocmd Filetype c inoremap <C-q><C-q> printf()<Left>
-  autocmd Filetype c inoremap <C-q><C-a> int main(int argc, char *argv[]){<CR>}<Up><End><CR>
-  autocmd FileType autohotkey setlocal commentstring=;%s
+  autocmd CmdlineEnter * setlocal cursorline
+  autocmd CmdlineLeave * setlocal nocursorline
+  autocmd CmdlineLeave * if bufname("") =~ "NERD_tree_\\d" | setlocal cursorline | endif
+  autocmd BufNewFile,BufRead *.fish setlocal filetype=fish
 augroup END
 "}}}
-
-"{{{ GUI Vim settings
+"{{{ GUI Vim Settings
 if has('gui_running')
   set nonumber
   set laststatus=1
-  set background=light
   colorscheme morning
-  " colorscheme carbonized-light
   set guifont=Consolas:h10
-  " set guifont=Source\ Code\ Pro:h10
   set guioptions=
   set linespace=0
   set belloff=all
-  set list
-  " Highlighting
-  hi BufTabLineFill guifg=#fff8eb guibg=#fff8eb ctermbg=none
-  hi BufTabLineHidden guifg=#a09b97 guibg=#fff8eb
-  hi BufTabLineActive guifg=#524f4b guibg=#fff8eb
-  hi BufTabLineCurrent guifg=#609456 guibg=#fff1d7
-
-  hi Folded ctermbg=none cterm=none guibg=NONE gui=italic
-  hi Search cterm=none ctermbg=11 ctermfg=0
-  hi VertSplit cterm=none ctermbg=none guibg=NONE gui=NONE
-  hi EndOfBuffer ctermfg=8 guifg=bg
-  hi MatchParen gui=underline,bold guifg=black guibg=bg
-  hi TabLineFill guibg=bg gui=none
-  hi TabLineSel guibg=bg guifg=black gui=bold,underline
-  hi TabLine guibg=bg guifg=#8787af gui=none
-
   set lines=45 columns=160
 endif
-":colorscheme <Tab> to view available colorschemes
-""}}}
-
+"}}}
+"{{{ Terminal Vim Settings
+if !has("gui_running")
+  set encoding=utf-8
+  scriptencoding utf-8
+  set fileencoding=utf-8
+  colorscheme default
+  "Instantly exit visual mode with <Esc>
+  " set ttimeoutlen=10
+  " augroup FastEscape
+  "   autocmd!
+  "   au InsertEnter * set timeoutlen=0
+  "   au InsertLeave * set timeoutlen=1000
+  " augroup END
+endif
+"}}}
 "{{{ Statusline Settings statsett
 " User-defined highlight groups must be declared after 'colorscheme' else it will be overwritten
 " hi User1 cterm=bold ctermfg=232 ctermbg=11 guibg=#ffe8be
@@ -1018,15 +1102,12 @@ set statusline+=%=                           " right align
 "set statusline+=\ %{fugitive#head()}         " show git branch
 set statusline+=\ %(%l,%c%V%)                " show line, column, virtual column (denoted with a '-' in front)
 " set statusline+=\ %(%l,%c%)                  " show line, column
-set statusline+=%3p%%\                       " percentage of file shown
+set statusline+=\ %3p%%\                       " percentage of file shown
 " set statusline+=%#Search#                    " switch to Search highlight
 " set statusline+=%1*                          " switch to User1 highlight
 " set statusline+=\ %(%{'help'!=&filetype?bufnr('%'):''}\ %) " buffer number
 set statusline+=(%(%{'help'!=&filetype?bufnr('%'):''})%) " buffer number
 " set statusline+=%*                           " switch to statusline highlight
-"hi StatusLine   ctermfg=233  ctermbg=103 cterm=bold gui=bold guibg=#ffe8be
-hi StatusLine   ctermfg=233  ctermbg=103 cterm=bold gui=bold guibg=Grey
-hi StatusLineNC ctermfg=103 ctermbg=none cterm=none,underline guibg=bg gui=underline
 "}}}
 
 "{{{ Vim Functions
