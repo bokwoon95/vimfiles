@@ -1006,23 +1006,23 @@ set noswapfile
 " if isdirectory(expand("$HOME/vimfiles/.view"))
 "   set viewdir=$HOME/vimfiles/.view//
 " endif
-" fun! Makeview() abort
-" let viewfile = expand('%:p') . '.v'
-"   execute "mkview! ".viewfile
-"   :echo "saved view in ".viewfile
-" endfun
-" fun! Loadview() abort
-"   let viewfile = expand('%:p') . '.v'
-"   execute "silent! source ".viewfile
-"   :echo "loaded view from ".viewfile
-" endfun
-" command! MKV call Makeview()
-" command! LDV call Loadview()
-" augroup FoldSave
-"   autocmd!
-"   au BufWrite,VimLeave *.py call Makeview()
-"   au BufRead *.py silent! call Loadview()
-" augroup END
+fun! Makeview() abort
+  let viewfile = expand('%:p:h') . "/v__" . expand('%:t')
+  execute "mkview! ".viewfile
+  :echo "saved view in ".viewfile
+endfun
+fun! Loadview() abort
+  let viewfile = expand('%:p:h') . "/v__" . expand('%:t')
+  execute "silent! source ".viewfile
+  :echo "loaded view from ".viewfile
+endfun
+command! MKV call Makeview()
+command! LDV call Loadview()
+augroup FoldSave
+  autocmd!
+  au BufWrite,VimLeave *.py call Makeview()
+  au BufRead *.py silent! call Loadview()
+augroup END
 
 "{{{ MyHighlights
 function! MyHighlights() abort
@@ -1053,8 +1053,8 @@ augroup Autocommands
   autocmd!
   autocmd ColorScheme * call MyHighlights()
   autocmd BufReadPost * call setpos(".", getpos("'\""))
-  autocmd CmdlineEnter * setlocal cursorline
-  autocmd CmdlineLeave * setlocal nocursorline
+  " autocmd CmdlineEnter * setlocal cursorline
+  " autocmd CmdlineLeave * setlocal nocursorline
   autocmd CmdlineLeave * if bufname("") =~ "NERD_tree_\\d" | setlocal cursorline | endif
   autocmd BufNewFile,BufRead *.fish setlocal filetype=fish
 augroup END
