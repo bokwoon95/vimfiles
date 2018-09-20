@@ -900,7 +900,9 @@ inoremap <M-b> <C-o>B
 inoremap <C-a> <C-o>g^
 inoremap <C-e> <C-o>g$
 "forward delete, backward delete & character delete
-inoremap <M-d> <C-g>u<C-o>vec<C-g>u
+" inoremap <M-d> <C-g>u<C-o>vec<C-g>u
+inoremap <expr> <M-d> col(".") == col("$") ? "<Del>" : "<C-o>dw"
+" inoremap <expr> <M-d> 1 ? "\<C-o>cw" : ""
 inoremap <M-BS> <C-g>u<C-w><C-g>u
 inoremap <C-w> <C-g>u<C-w><C-g>u
 inoremap <C-d> <Del>
@@ -991,6 +993,33 @@ inoreabbr \lambda\ λ<C-r>=Eatchar('\m\s\<Bar>/')<CR>
 inoreabbr \time\ <C-r>=strftime("%d-%b-%Y @ %H:%M")<CR><C-r>=Eatchar('\m\s\<Bar>/')<CR>
 inoreabbr \date\ <C-r>=strftime("%d-%b-%Y")<CR><C-r>=Eatchar('\m\s\<Bar>/')<CR>
 "}}}
+"{{{ Views
+fun! Makeview(...) abort
+  let force_makeview = a:0 >= 1 ? a:1 : 0
+  let viewfile = expand('%:p:h') . "/v__" . expand('%:t:r')
+  if !filereadable(viewfile) && force_makeview!=1
+    return
+  endif
+  execute "mkview! ".viewfile
+  :echo "saved view in ".viewfile
+endfun
+fun! Loadview() abort
+  let viewfile = expand('%:p:h') . "/v__" . expand('%:t:r')
+  if filereadable(viewfile)
+    execute "silent! source ".viewfile
+    :echo "loaded view from ".viewfile
+  else
+    :echo "viewfile not found in: ".viewfile
+  endif
+endfun
+command! MKV call Makeview(1)
+command! LDV call Loadview()
+augroup AutosaveView
+  autocmd!
+  au BufWrite,VimLeave *.py call Makeview()
+  au BufRead *.py silent! call Loadview()
+augroup END
+"}}}
 
 " Set swap & undo file directory
 " if isdirectory(expand("$HOME/vimfiles/.swp"))
@@ -1006,23 +1035,6 @@ set noswapfile
 " if isdirectory(expand("$HOME/vimfiles/.view"))
 "   set viewdir=$HOME/vimfiles/.view//
 " endif
-fun! Makeview() abort
-  let viewfile = expand('%:p:h') . "/v__" . expand('%:t')
-  execute "mkview! ".viewfile
-  :echo "saved view in ".viewfile
-endfun
-fun! Loadview() abort
-  let viewfile = expand('%:p:h') . "/v__" . expand('%:t')
-  execute "silent! source ".viewfile
-  :echo "loaded view from ".viewfile
-endfun
-command! MKV call Makeview()
-command! LDV call Loadview()
-augroup FoldSave
-  autocmd!
-  au BufWrite,VimLeave *.py call Makeview()
-  au BufRead *.py silent! call Loadview()
-augroup END
 
 "{{{ MyHighlights
 function! MyHighlights() abort
@@ -1061,7 +1073,7 @@ augroup END
 "}}}
 "{{{ GUI Vim Settings
 if has('gui_running')
-  set nonumber
+  " set nonumber
   set laststatus=1
   colorscheme morning
   set guifont=Consolas:h10
