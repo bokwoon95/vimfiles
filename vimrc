@@ -723,17 +723,17 @@ noremap <expr> <CR> bufname("") == "[Command Line]" ? "<CR>"  :
                   \ v:count == 0                    ? "<Tab>" : "Gzz"
 if !empty(globpath(&rtp, 'autoload/smooth_scroll.vim'))
 if has('gui_running')
-	nnoremap <silent> <C-d> :call Smooth_scroll_down(&scroll, 5, 2)<CR>
-	nnoremap <silent> <C-a> :call Smooth_scroll_up(&scroll, 5, 2)<CR>
-	nnoremap <silent> <C-u> :call Smooth_scroll_up(&scroll, 5, 2)<CR>
-	nnoremap <silent> <C-h> :call Smooth_scroll_up(4, 5, 1)<CR>
-	nnoremap <silent> <C-l> :call Smooth_scroll_down(4, 5, 1)<CR>
+  nnoremap <silent> <C-d> :call Smooth_scroll_down(&scroll, 5, 2)<CR>
+  nnoremap <silent> <C-a> :call Smooth_scroll_up(&scroll, 5, 2)<CR>
+  nnoremap <silent> <C-u> :call Smooth_scroll_up(&scroll, 5, 2)<CR>
+  nnoremap <silent> <C-h> :call Smooth_scroll_up(4, 5, 1)<CR>
+  nnoremap <silent> <C-l> :call Smooth_scroll_down(4, 5, 1)<CR>
 else
-	" nnoremap <silent> <C-d> :call smooth_scroll#down(&scroll, 2, 2)<CR>
-	" nnoremap <silent> <C-a> :call smooth_scroll#up(&scroll, 2, 2)<CR>
-	" nnoremap <silent> <C-u> :call smooth_scroll#up(&scroll, 2, 2)<CR>
-	" nnoremap <silent> <C-h> :call smooth_scroll#up(4, 2, 1)<CR>
-	" nnoremap <silent> <C-l> :call smooth_scroll#down(4, 2, 1)<CR>
+  " nnoremap <silent> <C-d> :call smooth_scroll#down(&scroll, 2, 2)<CR>
+  " nnoremap <silent> <C-a> :call smooth_scroll#up(&scroll, 2, 2)<CR>
+  " nnoremap <silent> <C-u> :call smooth_scroll#up(&scroll, 2, 2)<CR>
+  " nnoremap <silent> <C-h> :call smooth_scroll#up(4, 2, 1)<CR>
+  " nnoremap <silent> <C-l> :call smooth_scroll#down(4, 2, 1)<CR>
 endif
 endif
 "}}}
