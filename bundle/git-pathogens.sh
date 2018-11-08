@@ -12,10 +12,8 @@ done < plugins.txt
 # for each plugin in $arr, clone it into current directory
 arr_len=${#arr[@]}
 for i in "${!arr[@]}"; do
-  # if $plugin is "markonm/traces.vim"
-  plugin=${arr[$i]}
-  # then $name is "traces.vim"
-  name="$( echo $plugin | sed -n 's:[^/]*/\([^/]*\).*:\1:p' )"
+  plugin=${arr[$i]} # e.g. if $plugin is "markonm/traces.vim"
+  name="$( echo $plugin | sed -n 's:[^/]*/\([^/]*\).*:\1:p' )" # then $name is "traces.vim"
   # if directory already exists, delete it so we can clone without conflict
   if [[ ! -z "${name// /}" && -d "$CURRENTDIR/$name" ]]; then
     rm -rf "$CURRENTDIR/$name"
