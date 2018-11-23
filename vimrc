@@ -73,10 +73,13 @@ if !has("gui_running") && !has('nvim')
   map! <F27> <M-'>
   map <F27> <M-'>
 endif
-if has('macunix')
-  set shell=/bin/zsh
-elseif has('unix')
-  set shell=/usr/bin/zsh
+" if has('macunix')
+"   set shell=/bin/zsh
+" elseif has('unix')
+"   set shell=/usr/bin/zsh
+" endif
+if has('unix')
+  set shell=/bin/bash
 endif
 "}}}
 "{{{ Hardcoded defaults
