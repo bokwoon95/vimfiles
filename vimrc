@@ -1,11 +1,26 @@
-silent! execute pathogen#infect()
-syntax on
-filetype plugin indent on
+"{{{ Plugin Manager Initialization
 set encoding=utf-8
 scriptencoding utf-8
 set fileencoding=utf-8
+if !empty(glob('~/*vim*/autoload/pathogen.vim'))
+  silent! execute pathogen#infect()
+  syntax on
+  filetype plugin indent on
+else
+  if has('nvim') && empty(glob('~/.local/share/nvim/site/autoload/plug.vim'))
+    silent !curl -fLo ~/.local/share/nvim/site/autoload/plug.vim --create-dirs
+      \ https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+    autocmd VimEnter * PlugInstall --sync | source $MYVIMRC
+  elseif !has('nvim') && empty(glob('~/.vim/autoload/plug.vim'))
+    silent !curl -fLo ~/.vim/autoload/plug.vim --create-dirs
+      \ https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+    autocmd VimEnter * PlugInstall --sync | source $MYVIMRC
+  endif
+endif
+"}}}
 
 let mapleader = "\<Space>"
+silent! set macmeta
 
 "{{{ Meta for Terminal Vim
 if !has("gui_running") && !has('nvim')
@@ -73,12 +88,9 @@ if !has("gui_running") && !has('nvim')
   map! <F27> <M-'>
   map <F27> <M-'>
 endif
-" if has('macunix')
-"   set shell=/bin/zsh
-" elseif has('unix')
-"   set shell=/usr/bin/zsh
-" endif
-if has('unix')
+if has('macunix')
+  set shell=/bin/zsh
+elseif has('unix')
   set shell=/bin/bash
 endif
 "}}}
@@ -680,8 +692,7 @@ augroup Checkt
 augroup END
 command! EE e!
 autocmd! Filetype vim setlocal foldmethod=marker ts=2 sts=2 sw=2 et
-" set iskeyword+=-
-" set iskeyword+=.
+set foldtext=repeat('\ ',indent(v:foldstart)).foldtext()
 
 " Survival Pack
 noremap <C-j> 5gj
@@ -758,6 +769,7 @@ noremap Y "+y| "Copy to system clipboard in normal/visual mode
 nnoremap YY "+yy| "Copy to system clipboard in normal/visual mode
 nnoremap yal m`^yg_``| "yank current line (without newline)
 nnoremap Yal m`^"+yg$``| "Copy current line (without newline) to system clipboard
+nnoremap Y& m`^"+yg$``| "Copy current line (without newline) to system clipboard
 nnoremap <M-p> "+p| "Paste from system clipboard
 nnoremap <Leader>pc :let<Space>@+=expand('%:p:h')<CR>| "copy file's directory path to clipboard
 nnoremap <Leader>fc :let<Space>@+=expand('%:p')<CR>| "copy file's full path+filename to clipboard
@@ -943,7 +955,7 @@ cnoremap <C-b> <End>
 cnoremap <C-M-f> <S-Right>
 cnoremap <C-M-b> <S-Left>
 "}}}
-"{{{Vim Unimpaired
+"{{{ Vim Unimpaired
 "Insert space above and below
 function! s:BlankUp(count) abort
   put!=repeat(nr2char(10), a:count)
@@ -976,6 +988,8 @@ nnoremap [b :bprev<CR>
 nnoremap ]b :bnext<CR>
 nnoremap [l :lprevious<CR>
 nnoremap ]l :lnext<CR>
+nnoremap [q :cprevious<CR>
+nnoremap ]q :cnext<CR>
 "}}}
 "{{{ Vim Tips
 " To apply macros to multiple lines, highlight the lines and :norm!@@
@@ -1015,30 +1029,33 @@ inoreabbr \time\ <C-r>=strftime("%d-%b-%Y @ %H:%M")<CR><C-r>=Eatchar('\m\s\<Bar>
 inoreabbr \date\ <C-r>=strftime("%d-%b-%Y")<CR><C-r>=Eatchar('\m\s\<Bar>/')<CR>
 "}}}
 "{{{ Views
+set viewoptions=folds "let vop save only folds, and nothing else
 fun! Makeview(...) abort
   let force_makeview = a:0 >= 1 ? a:1 : 0
-  let viewfile = expand('%:p:h') . "/v__" . expand('%:t:r')
-  if !(filereadable(viewfile) || force_makeview==1)
-    return
+  let viewfile = expand('%:p:h') . "/v__" . expand('%:t:r') . expand('%:e')
+  if filereadable(viewfile) || force_makeview==1
+    execute "mkview! ".viewfile
+    execute "split ".viewfile."| 3d| w| bd"
+    echo "saved view in ".viewfile
   endif
-  execute "mkview! ".viewfile
-  :echo "saved view in ".viewfile
 endfun
 fun! Loadview() abort
-  let viewfile = expand('%:p:h') . "/v__" . expand('%:t:r')
+  let viewfile = expand('%:p:h') . "/v__" . expand('%:t:r') . expand('%:e')
   if filereadable(viewfile)
     execute "silent! source ".viewfile
-    :echo "loaded view from ".viewfile
+    echo "loaded view from ".viewfile
   else
-    :echo "viewfile not found in: ".viewfile
+    " this else conditional is for debugging purposes
+    echo "viewfile not found in: ".viewfile
   endif
 endfun
+command! Mkview call Makeview(1)
 command! MKV call Makeview(1)
 command! LDV call Loadview()
 augroup AutosaveView
   autocmd!
-  au BufWrite,VimLeave *.py call Makeview()
-  au BufRead *.py silent! call Loadview()
+  au BufWrite,VimLeave *.py,*.go call Makeview()
+  au BufRead *.py,*.go silent! call Loadview()
 augroup END
 "}}}
 
@@ -1097,56 +1114,78 @@ augroup END
 "}}}
 "{{{ GUI Vim Settings
 if has('gui_running')
-  " set nonumber
-  set laststatus=1
   colorscheme morning
-  set guifont=Consolas:h10
+  set laststatus=1
   set guioptions=
-  set linespace=0
   set belloff=all
-  set lines=45 columns=160
+  set linespace=2
+  if has('macunix')
+    set guifont=Source\ Code\ Pro:h12
+  elseif has('unix')
+    set guifont=DejaVu\ Sans\ Mono\ Book
+    set lines=40 columns=150
+  elseif has('win32')
+    set guifont=Consolas:h10
+    set linespace=0
+    set lines=45 columns=160
+  endif
 endif
 "}}}
 "{{{ Terminal Vim Settings
 if !has("gui_running")
-  set encoding=utf-8
-  scriptencoding utf-8
-  set fileencoding=utf-8
-  colorscheme default
-  "Instantly exit visual mode with <Esc>
-  " set ttimeoutlen=10
-  " augroup FastEscape
-  "   autocmd!
-  "   au InsertEnter * set timeoutlen=0
-  "   au InsertLeave * set timeoutlen=1000
-  " augroup END
+  if has('nvim')
+    colorscheme default
+    set guicursor=n-v-c:block,i-ci-ve:ver25,r-cr:hor20,o:hor50
+          \,a:blinkwait700-blinkoff400-blinkon250-Cursor/lCursor
+          \,sm:block-blinkwait175-blinkoff150-blinkon175
+  else
+    set encoding=utf-8
+    scriptencoding utf-8
+    set fileencoding=utf-8
+    if has('macunix')
+      colorscheme zellner
+    else
+      colorscheme default
+    endif
+    "instantly exit visual mode with <esc>
+    set ttimeoutlen=10
+    " augroup fastescape
+    "   autocmd!
+    "   au insertenter * set timeoutlen=0
+    "   au insertleave * set timeoutlen=1000
+    " augroup end
+  endif
+endif
+"}}}
+"{{{ WSL Clipboard Support
+func! GetSelectedText()
+  normal gv"xy
+  let result = getreg("x")
+  return result
+endfunc
+if !has("clipboard") && executable("clip.exe")
+  xnoremap Y :call system('clip.exe', GetSelectedText())<CR>
 endif
 "}}}
 "{{{ Statusline Settings statsett
 set statusline=
-if has('nvim')
-  set statusline+=[%{strlen(&ft)?&ft:'none'},  " file
-  set statusline+=%{strlen(&fenc)?&fenc:&enc}, " encoding
-  set statusline+=%{&fileformat}]              " file format
-else
-  set statusline+=(%{strlen(&ft)?&ft:'none'},  " file
-  set statusline+=%{strlen(&fenc)?&fenc:&enc}, " encoding
-  set statusline+=%{&fileformat})              " file format
-endif
-set statusline+=\ %f                         " t filename, f relative filepath, F absolute filepath
-set statusline+=%{&modified?'\ +':''}        " show '+' when file has been modified
-set statusline+=%{&readonly?'\ [RO]':''}        " show 'RO' when file is in readonly
-set statusline+=%{!&modifiable?'\ [noma]':''} " show 'noma' when file is nonmodifiable
-set statusline+=%=                           " right align
-set statusline+=\ %{exists('g:loaded_obsession')?ObsessionStatus():''} "Obsession status
-set statusline+=\ %{exists('g:loaded_fugitive')?fugitive#head():''} "show git branch
-set statusline+=\ %(%l,%c%V%)                " show line, column, virtual column (denoted with a '-' in front)
-set statusline+=\ %3p%%\                       " percentage of file shown
-if has('nvim')
-  set statusline+=[%(%{'help'!=&filetype?bufnr('%'):''}%)] " buffer number
-else
-  set statusline+=(%(%{'help'!=&filetype?bufnr('%'):''})%) " buffer number
-endif
+set statusline+=%{has('nvim')?'[':'('}                 " [(
+set statusline+=%{strlen(&ft)?&ft:'none'},             " Filetype
+set statusline+=%{strlen(&fenc)?&fenc:&enc},           " Encoding
+set statusline+=%{&fileformat}                         " File format (dos, unix)
+set statusline+=%{has('nvim')?']':')'}                 " ])
+set statusline+=\ %f                                   " t filename, f relative filepath, F absolute filepath
+set statusline+=%{&modified?'\ +':''}                  " Show '+' when file has been modified
+set statusline+=%{&readonly?'\ [RO]':''}               " Show 'RO' when file is in readonly
+set statusline+=%{!&modifiable?'\ [noma]':''}          " Show 'noma' when file is nonmodifiable
+set statusline+=%=                                     " Right align
+set statusline+=\ %{exists('g:loaded_obsession')?ObsessionStatus():''} " Obsession status
+set statusline+=\ %{exists('g:loaded_fugitive')?fugitive#head():''}    " Git branch
+set statusline+=\ %(%l,%c%V%)                          " Show line, column, virtual column (denoted with a '-' in front)
+set statusline+=\ %3p%%\                               " Percentage of file shown
+set statusline+=%{has('nvim')?'[':'('}                 " [(
+set statusline+=%(%{'help'!=&filetype?bufnr('%'):''}%) " Buffer number
+set statusline+=%{has('nvim')?']':')'}                 " ])
 "}}}
 
 "{{{ Vim Functions
