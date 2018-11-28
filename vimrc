@@ -1,7 +1,7 @@
 "{{{ Plugin Manager Initialization
-set encoding=utf-8
-scriptencoding utf-8
-set fileencoding=utf-8
+silent! set encoding=utf-8
+silent! scriptencoding utf-8
+silent! set fileencoding=utf-8
 if !empty(glob('~/*vim*/autoload/pathogen.vim'))
   silent! execute pathogen#infect()
   syntax on
@@ -742,7 +742,6 @@ inoremap <expr> <CR> pumvisible() ? "\<C-y>" : "\<C-g>u\<CR>"
 inoremap <expr> <C-j> pumvisible() ? "\<C-y>" : ""
 "}}}
 "{{{ hjkl & movement
-nnoremap <C-a> <C-u>
 nnoremap <silent> h <BS>
 nnoremap <silent> l <Space>
 xnoremap <silent> h <BS>
@@ -767,8 +766,7 @@ nnoremap yd ^yg_"_dd| "dd but w/o newline char
 noremap <M-d> "_d| "Black_hole delete without saving to register
 noremap Y "+y| "Copy to system clipboard in normal/visual mode
 nnoremap YY "+yy| "Copy to system clipboard in normal/visual mode
-nnoremap yal m`^yg_``| "yank current line (without newline)
-nnoremap Yal m`^"+yg$``| "Copy current line (without newline) to system clipboard
+nnoremap y7 m`^yg_``| "yank current line (without newline)
 nnoremap Y& m`^"+yg$``| "Copy current line (without newline) to system clipboard
 nnoremap <M-p> "+p| "Paste from system clipboard
 nnoremap <Leader>pc :let<Space>@+=expand('%:p:h')<CR>| "copy file's directory path to clipboard
@@ -776,7 +774,6 @@ nnoremap <Leader>fc :let<Space>@+=expand('%:p')<CR>| "copy file's full path+file
 cnoremap <C-k> <C-\>estrpart(getcmdline(),0,getcmdpos()-1)<CR>| "kill from current position to EOL
 cnoremap <C-y> <C-r>+
 cnoremap <M-y> <C-r>"
-nnoremap <Leader>kw m`:%s/\s\+$//e<CR>``:echo '@@@ Trailing whitespaces purged @@@'<CR>| "Kill all orphan whitespaces
 nnoremap <Leader>ww m`:%s/\s\+$//e<CR>``:echo '+++ Trailing whitespaces purged +++'<CR>| "Kill all orphan whitespaces
 xnoremap <silent> * :<C-u>
       \let old_reg=getreg('"')<Bar>let old_regtype=getregtype('"')<CR>
@@ -1033,14 +1030,25 @@ set viewoptions=folds "let vop save only folds, and nothing else
 fun! Makeview(...) abort
   let force_makeview = a:0 >= 1 ? a:1 : 0
   let viewfile = expand('%:p:h') . "/v__" . expand('%:t:r') . expand('%:e')
+  let viewfolder = expand('%:p:h') . "/.v__views"
+  let viewfile = viewfolder . "/v__" . expand('%:t:r') . expand('%:e')
   if filereadable(viewfile) || force_makeview==1
+    if force_makeview==1 "I suspect this is a bug that the cursor keeps gg-ing
+      execute "execute mkdir('" . viewfolder . "', 'p')"
+    endif
     execute "mkview! ".viewfile
-    execute "split ".viewfile."| 3d| w| bd"
-    echo "saved view in ".viewfile
+    execute "keepalt split ".viewfile
+    execute 'norm! 3G"_dd'
+    execute "w| bd"
+    if force_makeview==1
+      echo "saved view in ".viewfile
+    endif
   endif
 endfun
 fun! Loadview() abort
   let viewfile = expand('%:p:h') . "/v__" . expand('%:t:r') . expand('%:e')
+  let viewfolder = expand('%:p:h') . "/.v__views"
+  let viewfile = viewfolder . "/v__" . expand('%:t:r') . expand('%:e')
   if filereadable(viewfile)
     execute "silent! source ".viewfile
     echo "loaded view from ".viewfile
@@ -1054,8 +1062,8 @@ command! MKV call Makeview(1)
 command! LDV call Loadview()
 augroup AutosaveView
   autocmd!
-  au BufWrite,VimLeave *.py,*.go call Makeview()
-  au BufRead *.py,*.go silent! call Loadview()
+  au BufWrite,VimLeave * call Makeview()
+  au BufRead * silent! call Loadview()
 augroup END
 "}}}
 
@@ -1098,10 +1106,16 @@ function! MyHighlights() abort
   hi SpellCap ctermbg=234 ctermfg=14 cterm=underline
   hi SignColumn ctermbg=none
 endfunction
+fun! RestoreCursorPosition() abort
+  if &ft =~ 'gitcommit\|gitcommit'
+    return
+  endif
+  call setpos(".", getpos("'\""))
+endfun
 augroup Autocommands
   autocmd!
   autocmd ColorScheme * call MyHighlights()
-  autocmd BufReadPost * call setpos(".", getpos("'\""))
+  autocmd BufReadPost * call RestoreCursorPosition()
   " autocmd CmdlineEnter * setlocal cursorline
   " autocmd CmdlineLeave * setlocal nocursorline
   " autocmd CmdlineLeave * if bufname("") =~ "NERD_tree_\\d" | setlocal cursorline | endif
@@ -1110,6 +1124,7 @@ augroup Autocommands
   " autocmd BufLeave NERD_tree_* setlocal nocursorline
   autocmd BufNewFile,BufRead *.fish setlocal filetype=fish
   autocmd BufEnter,BufLeave * if &buftype ==# 'terminal' | let g:t_bufnum = expand('<abuf>') | endif
+  autocmd CompleteDone * pclose
 augroup END
 "}}}
 "{{{ GUI Vim Settings
@@ -1180,7 +1195,7 @@ set statusline+=%{&readonly?'\ [RO]':''}               " Show 'RO' when file is 
 set statusline+=%{!&modifiable?'\ [noma]':''}          " Show 'noma' when file is nonmodifiable
 set statusline+=%=                                     " Right align
 set statusline+=\ %{exists('g:loaded_obsession')?ObsessionStatus():''} " Obsession status
-set statusline+=\ %{exists('g:loaded_fugitive')?fugitive#head():''}    " Git branch
+set statusline+=\ %{exists('g:loaded_fugitive')?fugitive#head(7):''}    " Git branch
 set statusline+=\ %(%l,%c%V%)                          " Show line, column, virtual column (denoted with a '-' in front)
 set statusline+=\ %3p%%\                               " Percentage of file shown
 set statusline+=%{has('nvim')?'[':'('}                 " [(
