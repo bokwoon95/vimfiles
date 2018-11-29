@@ -675,9 +675,9 @@ set wrap linebreak                  " Soft-wrap long lines without breaking word
 set display+=lastline               " display partial lines that have been wrapped
 set showcmd                         " Show commands in minibuffer
 set ignorecase smartcase            " Ignore case when searching, unless capitals are used
-setlocal ts=4 sw=4 sts=4 et         " Use soft tabs
+set ts=4 sw=4 sts=4 et              " Use soft tabs
 set mouse=a                         " Enable mouse in terminal
-setlocal list                       " Show hidden characters
+set list                            " Show hidden characters
 set listchars=tab:\|\ ,trail:·      " ,eol:¬
 set foldopen-=block                 " Prevent { & } from opening folds
 set breakindent                     " wrapped lines keep same level of indent visually
