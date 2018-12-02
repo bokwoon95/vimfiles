@@ -602,11 +602,6 @@ let g:ctrlp_prompt_mappings = {
 nnoremap <C-c>f :CtrlPMRU<CR>
 nnoremap <C-x><C-b> :CtrlPBuffer<CR>
 "}}}
-"{{{ Sneak
-let g:sneak#label = 1
-vmap s <Plug>SneakLabel_s
-vmap S <Plug>SneakLabel_S
-"}}}
 "{{{ Undotree
 nnoremap <C-x><C-u> :UndotreeToggle<CR>
 let g:undotree_WindowLayout=4
@@ -617,13 +612,10 @@ function! g:Undotree_CustomMap()
   nmap <buffer> <CR> <plug>UndotreeClose
 endfunc
 "}}}
-"{{{ Easy-Align
-xmap ga <Plug>(EasyAlign)
-nmap ga <Plug>(EasyAlign)
-"}}}
 "{{{ indentLine
 let g:indentLine_enabled=1
 let g:indentLine_char='¦'
+let g:indentLine_color_term = 237
 nnoremap <Leader>il :IndentLinesToggle<CR>
 "}}}
 "{{{ argwrap
@@ -661,6 +653,9 @@ let g:slime_no_mappings=1
 xmap <C-c><C-e> <Plug>SlimeRegionSend
 nmap <C-c><C-e> <Plug>SlimeParagraphSend
 nmap <C-c><C-s> <Plug>SlimeLineSend
+"}}}
+"{{{ vim-matchup
+let g:matchup_matchparen_status_offscreen = 0
 "}}}
 "}}}
 
