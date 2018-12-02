@@ -91,7 +91,11 @@ endif
 if has('macunix')
   set shell=/bin/zsh
 elseif has('unix')
-  set shell=/bin/bash
+  if executable('zsh')
+    set shell=/usr/bin/zsh
+  else
+    set shell=/bin/bash
+  endif
 endif
 "}}}
 "{{{ Hardcoded defaults
@@ -661,36 +665,37 @@ nmap <C-c><C-s> <Plug>SlimeLineSend
 "}}}
 
 syntax enable
-set hidden                          " Hide Buffers, not Kill
-set autoindent                      " Autoindentation
-set wildmenu                        " Show completion options in vim command line
-set wildmode=list:longest,full      " Bash-style completion menu
-set wildignorecase                  " ignore case in wildmenu
-set number                          " Show line numbers
-set ruler                           " Show cursor position
-set laststatus=2                    " Always show statusbar
-set backspace=2                     " Enable backspace capability
-set incsearch hlsearch              " Realtime searching, and persistently highlight
-set wrap linebreak                  " Soft-wrap long lines without breaking words into 2
-set display+=lastline               " display partial lines that have been wrapped
-set showcmd                         " Show commands in minibuffer
-set ignorecase smartcase            " Ignore case when searching, unless capitals are used
-set ts=4 sw=4 sts=4 et              " Use soft tabs
-set mouse=a                         " Enable mouse in terminal
-set list                            " Show hidden characters
-set listchars=tab:\|\ ,trail:·      " ,eol:¬
-set foldopen-=block                 " Prevent { & } from opening folds
-set breakindent                     " wrapped lines keep same level of indent visually
-silent! set inccommand=nosplit      " Realtime feedback for Ex Commands (NEOVIM ONLY)
-set fillchars+=vert:│               " Vertical bar separator
-set matchpairs+=<:>                 " % can jump between <,> pairs
-set whichwrap+=[,],<,>              " <Left> & <Right> keys will wrap to prev/next line
-set autoread                        " Reload files if they have been changed externally
+set hidden                     " Hide Buffers, not Kill
+set autoindent                 " Autoindentation
+set wildmenu                   " Show completion options in vim command line
+set wildmode=list:longest,full " Bash-style completion menu
+set wildignorecase             " ignore case in wildmenu
+set number                     " Show line numbers
+set ruler                      " Show cursor position
+set laststatus=2               " Always show statusbar
+set backspace=2                " Enable backspace capability
+set incsearch hlsearch         " Realtime searching, and persistently highlight
+set wrap linebreak             " Soft-wrap long lines without breaking words into 2
+set display+=lastline          " display partial lines that have been wrapped
+set showcmd                    " Show commands in minibuffer
+set ignorecase smartcase       " Ignore case when searching, unless capitals are used
+set ts=4 sw=4 sts=4 et         " Use soft tabs
+set mouse=a                    " Enable mouse in terminal
+set list                       " Show hidden characters
+set listchars=tab:\|\ ,trail:· " ,eol:¬
+set foldopen-=block            " Prevent { & } from opening folds
+set breakindent                " wrapped lines keep same level of indent visually
+silent! set inccommand=nosplit " Realtime feedback for Ex Commands (NEOVIM ONLY)
+set fillchars+=vert:│          " Vertical bar separator
+set matchpairs+=<:>            " % can jump between <,> pairs
+set whichwrap+=[,],<,>         " <Left> & <Right> keys will wrap to prev/next line
+syntax sync minlines=256       " start highlighting from 256 lines backwards
+set synmaxcol=300              " do not highlight very long lines
+set autoread                   " Reload files if they have been changed externally
 augroup Checkt
   autocmd!
   autocmd FocusGained,BufEnter * checktime " To trigger vim's autoread on focus gained or buffer enter
 augroup END
-command! EE e!
 autocmd! Filetype vim setlocal foldmethod=marker ts=2 sts=2 sw=2 et
 set foldtext=repeat('\ ',indent(v:foldstart)).foldtext()
 
@@ -702,7 +707,7 @@ noremap <C-l> 4<C-e>
 nnoremap <C-x>b :ls<CR>:b<Space>
 cnoremap <silent> <expr> <CR> getcmdline() == "b " ? "\<C-c>:b#\<CR>" : "\<CR>"
 nnoremap <C-x><C-h> :setlocal hlsearch!<bar>set hlsearch?<CR>
-inoremap <expr> <C-y> !pumvisible() ? "\<C-o>:set paste\<CR>\<C-r>+\<C-o>:set nopaste\<CR>" : "\<C-y>"
+inoremap <expr> <C-y> !pumvisible() ? "\<C-o>:set paste\<CR>\<C-r>+\<C-o>:set nopaste\<CR>\<Esc>'[=']i" : "\<C-y>"
 command! TT verbose setlocal ts? sts? sw? et?
 command! T2 setlocal ts=2 sts=2 sw=2 et | echo "indentation set to 2 spaces"
 command! T4 setlocal ts=4 sts=4 sw=4 et | echo "indentation set to 4 spaces"
@@ -812,6 +817,19 @@ endfun
 inoremap <C-t> <Esc>`^:call DuplicateLineSavePosition()<CR>a<C-g>u
 command! Gitmergesearch let @/="^<<<<<<< HEAD$\\|^>>>>>>> [a-z0-9]\\{40}$\\|^=======$"
 command! GMS /^<<<<<<< HEAD$\|^>>>>>>> [a-z0-9]\{40}$\|^=======$
+fun! Checkt(...) abort
+  let checkt_all = a:0 >= 1 ? a:1 : 0
+  if checkt_all==1
+    let currbufnr = bufnr("%")
+    silent! bufdo checktime
+    execute "buffer" . currbufnr
+  else
+    silent! checktime
+  endif
+  echo "+++ Buffer Refreshed +++"
+endfun
+command! EE call Checkt()
+command! EA call Checkt(1)
 "}}}
 "{{{ Wildmenu Macros
 nnoremap <M-e> :e<Space><C-d>
@@ -1092,6 +1110,7 @@ function! MyHighlights() abort
   hi TabLineFill cterm=bold ctermbg=none gui=none guibg=bg
   hi TabLineSel cterm=bold,underline ctermbg=16 ctermfg=7 guibg=bg guifg=black gui=bold,underline
   hi TabLine cterm=none ctermbg=none ctermfg=246 guibg=bg guifg=#8787af gui=none
+  hi VemTablineShown cterm=none ctermbg=16 ctermfg=7 guibg=bg guifg=black
   hi Folded cterm=none ctermbg=none gui=none guibg=bg
   hi Search ctermfg=232 ctermbg=10 guifg=black guibg=Cyan1
   hi IncSearch cterm=none ctermfg=232 ctermbg=9
@@ -1105,6 +1124,9 @@ function! MyHighlights() abort
   hi SpellBad ctermbg=234 ctermfg=15 cterm=bold,underline
   hi SpellCap ctermbg=234 ctermfg=14 cterm=underline
   hi SignColumn ctermbg=none
+  hi ColorColumn ctermbg=234 guibg=grey85
+  hi SpecialKey term=bold ctermfg=237 guifg=Grey70
+  hi Whitespace term=bold ctermfg=237 guifg=Grey70
 endfunction
 fun! RestoreCursorPosition() abort
   if &ft =~ 'gitcommit\|gitcommit'
@@ -1148,27 +1170,14 @@ endif
 "}}}
 "{{{ Terminal Vim Settings
 if !has("gui_running")
+  colorscheme default
+  set background=light
   if has('nvim')
-    colorscheme default
     set guicursor=n-v-c:block,i-ci-ve:ver25,r-cr:hor20,o:hor50
           \,a:blinkwait700-blinkoff400-blinkon250-Cursor/lCursor
           \,sm:block-blinkwait175-blinkoff150-blinkon175
   else
-    set encoding=utf-8
-    scriptencoding utf-8
-    set fileencoding=utf-8
-    if has('macunix')
-      colorscheme zellner
-    else
-      colorscheme default
-    endif
-    "instantly exit visual mode with <esc>
     set ttimeoutlen=10
-    " augroup fastescape
-    "   autocmd!
-    "   au insertenter * set timeoutlen=0
-    "   au insertleave * set timeoutlen=1000
-    " augroup end
   endif
 endif
 "}}}
