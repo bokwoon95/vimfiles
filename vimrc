@@ -1182,8 +1182,10 @@ func! GetSelectedText()
   let result = getreg("x")
   return result
 endfunc
-if !has("clipboard") && executable("clip.exe")
+if !has("gui_running") && executable("clip.exe")
   xnoremap Y :call system('clip.exe', GetSelectedText())<CR>
+  nnoremap YY "xyy:call system('clip.exe', GetSelectedText())<CR>
+  nnoremap Y& m`^"xyg$``:call system('clip.exe', GetSelectedText())<CR>
 endif
 "}}}
 "{{{ Statusline Settings statsett
