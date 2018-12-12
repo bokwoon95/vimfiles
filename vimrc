@@ -7,14 +7,14 @@ if !empty(glob('~/vimfiles/autoload/pathogen.vim')) || !empty(glob('~/.vim/autol
   syntax on
   filetype plugin indent on
 else
-  if has('nvim') && empty(glob('~/.local/share/nvim/site/autoload/plug.vim'))
-    silent !curl -fLo ~/.local/share/nvim/site/autoload/plug.vim --create-dirs
-      \ https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
-    autocmd VimEnter * PlugInstall --sync | source $MYVIMRC
-  elseif !has('nvim') && empty(glob('~/.vim/autoload/plug.vim'))
+  if empty(glob('~/.vim/autoload/plug.vim'))
     silent !curl -fLo ~/.vim/autoload/plug.vim --create-dirs
       \ https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
     autocmd VimEnter * PlugInstall --sync | source $MYVIMRC
+  endif
+  if has('nvim') && empty(glob('~/.local/share/nvim/site/autoload/plug.vim'))
+    silent !curl -fLo ~/.local/share/nvim/site/autoload/plug.vim --create-dirs
+      \ https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
   endif
 endif
 "}}}
@@ -810,8 +810,8 @@ fun! DuplicateLineSavePosition() abort
     execute "normal! yyp".colnum."|"
 endfun
 inoremap <C-t> <Esc>`^:call DuplicateLineSavePosition()<CR>a<C-g>u
-command! Gitmergesearch let @/="^<<<<<<< HEAD$\\|^>>>>>>> [a-z0-9]\\{40}$\\|^=======$"
-command! GMS /^<<<<<<< HEAD$\|^>>>>>>> [a-z0-9]\{40}$\|^=======$
+command! Gitmergesearch let @/="^<<<<<<< .*$\\|^>>>>>>> .*$\\|^=======$"
+command! GMS /^<<<<<<< .*$\|^>>>>>>> .*$\|^=======$
 fun! Checkt(...) abort
   let checkt_all = a:0 >= 1 ? a:1 : 0
   if checkt_all==1
@@ -825,6 +825,7 @@ fun! Checkt(...) abort
 endfun
 command! EE call Checkt()
 command! EA call Checkt(1)
+xmap <S-Tab> %
 "}}}
 "{{{ Wildmenu Macros
 nnoremap <M-e> :e<Space><C-d>
@@ -1031,6 +1032,8 @@ nnoremap ]q :cnext<CR>
 " :%s/^/\=printf('%03d', line('.')) create a padded column of incrementing numbers
 " You can pipe the regex matches from :global into :substitute!
 " vim --startuptime vim.log to profile your vim startup
+" \_. is the turbo version of . which matches newline characters, allowing for regex matching over multiple lines
+" :redir @<register> to start recording Ex command outputs to <register>, :redir END to stop
 "}}}
 "{{{ iabbreviations nonrecursive
 "The double backslash is needed so vim doesn't complain

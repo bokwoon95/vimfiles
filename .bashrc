@@ -127,17 +127,25 @@ else
 fi
 
 # Must-have shortcuts
-alias updf="/mnt/c/Users/cbw/vimfiles/update.files.sh"
 # to expand an alias in zsh: C-x a
 # to expand an alias in bash: C-M-e or <Esc> C-e
 # to edit current line in $EDITOR (usu. vim): C-x C-e
-alias cdz="vim ~/.bashrc +'nnoremap q :qa!<CR>'"
+alias cdz="vim ~/.bashrc"
 alias sdz="source ~/.bashrc"
 alias ..="cd .. && pwd && ls"
 alias ...="cd ../.. && pwd && ls"
 alias ....="cd ../../.. && pwd && ls"
+alias ls="ls -F "
+alias lsa="ls -aF"
+alias lsl="ls -alF"
+alias cp="cp -v"
+alias mv="mv -v"
 cdd () {
-  cd "$1" && pwd && ls;
+  if [[ "$#" -eq 0 ]]; then
+    cd && pwd && ls
+  else
+    cd "$1" && pwd && ls;
+  fi
 }
 mkcd () {
   mkdir -p -- "$1" &&
@@ -145,8 +153,7 @@ mkcd () {
 }
 alias checksize="du -h -d 1 | sort -n" #display file sizes
 mann () {
-  if [ -z "$1" ]
-  then
+  if [[ "$#" -eq 0 ]]; then
     echo "What manual page do you want?"
   else
     man $1 |
@@ -155,10 +162,6 @@ mann () {
       vim -M - +'set nonu' +'set ls=1' +'nnoremap q :qa!<CR>'
   fi
 }
-alias lsa="ls -a -F"
-alias lsal="ls -a -l -F"
-alias cp="cp -v"
-alias mv="mv -v"
 unspace () {
   for f in "$@"; do
     mv "$f" "${f// /_}"
@@ -169,6 +172,10 @@ respace () {
     mv "$f" "${f//_/ }"
   done
 }
+testt () {
+  result=$(test "$@"; echo $?)
+  if [ $result == 0 ]; then
+    echo True
 
 # Path Aliases
 alias cduser="cd ${USERPROFILE//\\/\\\\} && pwd && ls"
