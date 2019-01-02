@@ -1,103 +1,3 @@
-"{{{ Plugin Manager Initialization
-silent! set encoding=utf-8
-silent! scriptencoding utf-8
-silent! set fileencoding=utf-8
-if !empty(glob('~/vimfiles/autoload/pathogen.vim')) || !empty(glob('~/.vim/autoload/pathogen.vim'))
-  silent! execute pathogen#infect()
-  syntax on
-  filetype plugin indent on
-else
-  if empty(glob('~/.vim/autoload/plug.vim'))
-    silent !curl -fLo ~/.vim/autoload/plug.vim --create-dirs
-      \ https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
-    autocmd VimEnter * PlugInstall --sync | source $MYVIMRC
-  endif
-  if has('nvim') && empty(glob('~/.local/share/nvim/site/autoload/plug.vim'))
-    silent !curl -fLo ~/.local/share/nvim/site/autoload/plug.vim --create-dirs
-      \ https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
-  endif
-endif
-"}}}
-
-let mapleader = "\<Space>"
-silent! set macmeta
-
-"{{{ Meta for Terminal Vim
-if !has("gui_running") && !has('nvim')
-  "Bind selected meta for selected keys: dbfnp<BS> hjkl vecyq
-  silent! exe "set <S-Left>=\<Esc>b"
-  silent! exe "set <S-Right>=\<Esc>f"
-  silent! exe "set <F31>=\<Esc>d"| "M-d
-  map! <F31> <M-d>
-  map <F31> <M-d>
-  silent! exe "set <F32>=\<Esc>n"| "M-n
-  map! <F32> <M-n>
-  map <F32> <M-n>
-  silent! exe "set <F33>=\<Esc>p"| "M-p
-  map! <F33> <M-p>
-  map <F33> <M-p>
-  silent! exe "set <F34>=\<Esc>\<C-?>"| "M-BS
-  map! <F34> <M-BS>
-  map <F34> <M-BS>
-  silent! exe "set <F35>=\<Esc>\<C-H>"| "M-BS
-  map! <F35> <M-BS>
-  map <F35> <M-BS>
-  silent! exe "set <F13>=\<Esc>h"| "M-h
-  map! <F13> <M-h>
-  map <F13> <M-h>
-  silent! exe "set <F14>=\<Esc>j"| "M-j
-  map! <F14> <M-j>
-  map <F14> <M-j>
-  silent! exe "set <F15>=\<Esc>k"| "M-k
-  map! <F15> <M-k>
-  map <F15> <M-k>
-  silent! exe "set <F16>=\<Esc>l"| "M-l
-  map! <F16> <M-l>
-  map <F16> <M-l>
-  silent! exe "set <F17>=\<Esc>v"| "M-v
-  map! <F17> <M-v>
-  map <F17> <M-v>
-  silent! exe "set <F18>=\<Esc>e"| "M-e
-  map! <F18> <M-e>
-  map <F18> <M-e>
-  silent! exe "set <F19>=\<Esc>c"| "M-c
-  map! <F19> <M-c>
-  map <F19> <M-c>
-  silent! exe "set <F20>=\<Esc>y"| "M-y
-  map! <F20> <M-y>
-  map <F20> <M-y>
-  silent! exe "set <F21>=\<Esc>q"| "M-q
-  map! <F21> <M-q>
-  map <F21> <M-q>
-  silent! exe "set <F22>=\<Esc>7"| "M-7
-  map! <F22> <M-7>
-  map <F22> <M-7>
-  silent! exe "set <F23>=\<Esc>8"| "M-8
-  map! <F23> <M-8>
-  map <F23> <M-8>
-  silent! exe "set <F24>=\<Esc>9"| "M-9
-  map! <F24> <M-9>
-  map <F24> <M-9>
-  silent! exe "set <F25>=\<Esc>0"| "M-0
-  map! <F25> <M-0>
-  map <F25> <M-0>
-  silent! exe "set <F26>=\<Esc>;"| "M-;
-  map! <F26> <M-;>
-  map <F26> <M-;>
-  silent! exe "set <F27>=\<Esc>'"| "M-'
-  map! <F27> <M-'>
-  map <F27> <M-'>
-endif
-if has('macunix')
-  set shell=/bin/zsh
-elseif has('unix')
-  if executable('zsh')
-    set shell=/usr/bin/zsh
-  else
-    set shell=/bin/bash
-  endif
-endif
-"}}}
 "{{{ Hardcoded defaults
 "{{{ moll/vim-bbye
 function! s:bdelete(action, bang, buffer_name)
@@ -766,7 +666,10 @@ nnoremap <Leader>ss :%s//g<Left><Left>
 xnoremap <Leader>ss :s//g<Left><Left>
 xnoremap <Leader>tbts :s/	/    /g<Left><Left>| "convert tab to 4 spaces for visual selection
 nnoremap <Leader>tbts :%s/	/    /g<Left><Left>| "convert tab to 4 spaces in normal mode
-nnoremap <Leader>rr gg=G``:echo 'File reindented'<CR>| "reindent file without losing cursor position
+nnoremap <Leader>rr :let b:wsv=winsaveview()<CR>
+            \gg=G
+            \:silent! call winrestview(b:wsv)<CR>
+            \:echo 'File reindented'<CR>| "reindent file without losing cursor position
 nnoremap <M-v> ^vg_| "V but w/o newline char
 nnoremap yd ^yg_"_dd| "dd but w/o newline char
 noremap <M-d> "_d| "Black_hole delete without saving to register
@@ -780,7 +683,12 @@ nnoremap <Leader>fc :let<Space>@+=expand('%:p')<CR>| "copy file's full path+file
 cnoremap <C-k> <C-\>estrpart(getcmdline(),0,getcmdpos()-1)<CR>| "kill from current position to EOL
 cnoremap <C-y> <C-r>+
 cnoremap <M-y> <C-r>"
-nnoremap <Leader>ww m`:%s/\s\+$//e<CR>``:echo '+++ Trailing whitespaces purged +++'<CR>| "Kill all orphan whitespaces
+nnoremap <Leader>ww :let b:wsv=winsaveview()<CR>
+      \:let b:old_search=@/<CR>
+      \:%s/\s\+$//e<CR>
+      \:let @/=b:old_search<CR>
+      \:silent! call winrestview(b:wsv)<CR>
+      \:echo '+++ Trailing whitespaces purged +++'<CR>| "Kill all orphan whitespaces
 xnoremap <silent> * :<C-u>
       \let old_reg=getreg('"')<Bar>let old_regtype=getregtype('"')<CR>
       \gvy/<C-R><C-R>=substitute(
@@ -805,8 +713,24 @@ xnoremap <Leader>ttc gugv:s/\v^\a\|\:\s\a\|<%(in>\|the>\|at>\|with>\|a>\|and>\|f
   "^titlecase that excludes words in the list (also works on all types of caps by converting eveything to small caps first)
   ":s/\v^\a|\:\s\a|<%(in>|the>|at>|with>|a>|and>|for>|of>|on>|from>|by>)@!\a/\U&/g
   "^ the bar characters must be escaped ie '\|'
-nnoremap <expr> <C-x><C-r> &diff ? ":windo diffoff<CR>:windo diffthis<CR>" : ""
-nnoremap <expr> <C-x><C-d> &diff ? "dd<C-w><C-w>yy<C-w><C-p>Pj" : ""
+nnoremap <expr> <C-x><C-r> &diff ? "
+            \:let g:prevwin=win_getid()<CR>
+            \:let b:wsv=winsaveview()<CR>
+            \:windo diffoff<CR>:windo diffthis<CR>
+            \:silent! call win_gotoid(g:prevwin)<CR>
+            \:silent! call winrestview(b:wsv)<CR>
+            \": ""
+nnoremap <expr> <C-x><C-d> &diff ?
+            \"dd<C-w><C-w>yy<C-w><C-p>Pj"
+            \: ""
+nnoremap <expr> <C-x><C-x><C-d> &diff ? "
+            \:let g:prevwin=win_getid()<CR>
+            \:let b:wsv=winsaveview()<CR>
+            \dd<C-w><C-w>yy<C-w><C-p>Pj
+            \:windo diffoff<CR>:windo diffthis<CR>
+            \:silent! call win_gotoid(g:prevwin)<CR>
+            \:silent! call winrestview(b:wsv)<CR>
+            \": ""
 cnoremap <C-j> <Down>
 nnoremap gh `[v`]| "Select last pasted text
 nnoremap <expr> <C-c><C-c> bufname("") == "[Command Line]" ? ":close<CR>" : ""
@@ -859,6 +783,7 @@ nnoremap <Leader>iv :e<Space>~/.vim/vimrc<CR>
 "{{{ UTF8 Macros
 inoremap <M-q><M-a> <C-v>u25c6<Space>| "◆ Db
 inoremap <M-q><M-b> <C-v>u2022<Space>| "•
+  inoremap <M-q>b <C-v>u2022<Space>| "•
 inoremap <M-q><M-c> <C-v>u25e6<Space>| "◦
 inoremap <M-q><M-d> <C-v>u25c7<Space>| "◇ Dw
 inoremap <M-q><M-l> <C-v>u2502| "│ vv
@@ -998,8 +923,14 @@ nnoremap [os :setlocal spell<CR>
 nnoremap ]os :setlocal nospell<CR>
 nnoremap [od :diffthis<CR>
 nnoremap ]od :diffoff<CR>
-nnoremap [wd m`:windo diffthis<CR><C-w><C-p>``zz
-nnoremap ]wd m`:diffoff!<CR>``zz
+nnoremap [wd :let g:prevwin=win_getid()<CR>
+      \:let b:wsv=winsaveview()<CR>
+      \:windo diffthis<CR>
+      \:silent! call win_gotoid(g:prevwin)<CR>
+      \:silent! call winrestview(b:wsv)<CR>
+nnoremap ]wd :let b:wsv=winsaveview()<CR>
+      \:diffoff!<CR>
+      \:silent! call winrestview(b:wsv)<CR>
 nnoremap [on :setlocal number<CR>
 nnoremap ]on :setlocal nonumber<CR>
 nnoremap [b :bprev<CR>
@@ -1041,6 +972,7 @@ nnoremap ]q :cnext<CR>
 " vim --startuptime vim.log to profile your vim startup
 " \_. is the turbo version of . which matches newline characters, allowing for regex matching over multiple lines
 " :redir @<register> to start recording Ex command outputs to <register>, :redir END to stop
+" To specify a case sensitive search pattern, append '\C'. (conversely, '\c' for a case insensitivite pattern)
 "}}}
 "{{{ iabbreviations nonrecursive
 "The double backslash is needed so vim doesn't complain
@@ -1262,6 +1194,31 @@ function! Eatchar(pat)
   let c = nr2char(getchar(0))
   return (c =~ a:pat) ? '' : c
 endfunction
+"}}}
+"{{{ Redir
+" https://gist.github.com/romainl/eae0a260ab9c135390c30cd370c20cd7
+function! Redir(cmd)
+  for win in range(1, winnr('$'))
+    if getwinvar(win, 'scratch')
+      execute win . 'windo close'
+    endif
+  endfor
+  if a:cmd =~ '^!'
+    let output = system(matchstr(a:cmd, '^!\zs.*'))
+  else
+    redir => output
+    execute a:cmd
+    redir END
+  endif
+  new
+  let w:scratch = 1
+  setlocal buftype=nofile bufhidden=wipe nobuflisted noswapfile nonumber
+  call setline(1, split(output, "\n"))
+endfunction
+command! -nargs=1 -complete=command Redir silent call Redir(<q-args>)
+" Usage:
+" 	:Redir hi ............. show the full output of command ':hi' in a scratch window
+" 	:Redir !ls -al ........ show the full output of command ':!ls -al' in a scratch window
 "}}}
 "}}}
 
