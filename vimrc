@@ -1,3 +1,7 @@
+silent! execute pathogen#infect()
+syntax on
+filetype plugin indent on
+
 "{{{ Hardcoded defaults
 "{{{ moll/vim-bbye
 function! s:bdelete(action, bang, buffer_name)
