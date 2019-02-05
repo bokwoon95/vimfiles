@@ -7,7 +7,7 @@ Script ID: 5624
 Version: 0.3.a
 License: MIT license {{{
 
-  Copyright (c) 2018 Andy Massimino
+  Copyright (c) 2019 Andy Massimino
 
   Copyright (c) 2016 Karl Yngve Lervåg
 
@@ -92,8 +92,10 @@ Default mappings~
 For customization, see |matchup-custom-mappings|.
 
                                                          *matchup-%*
-%                       Go forwards to next matching word.  If at a close word,
-                        cycle back to the corresponding open word.
+%                       When on a recognized word, go forwards to its next
+                        matching word.  If at a close word, cycle back to the
+                        corresponding open word.  If the cursor is not on a
+                        word, seek forwards to one and then jump to its match.
                         This is an |inclusive| motion.
 
                                                          *matchup-N%*
@@ -102,24 +104,26 @@ For customization, see |matchup-custom-mappings|.
                         See |g:matchup_motion_override_Npercent|.
 
                                                          *g%*
-g%                      Go backwards to [count]th previous matching word.  If
-                        at an open word, cycle around to the corresponding
-                        close word.
+g%                      When on a recognized word, go backwards to [count]th
+                        previous matching word.  If at an open word, cycle
+                        around to the corresponding open word.  If the cursor
+                        is not on a word, seek forwards to one and then jump
+                        to its match.
 
                                                          *[%*
-[%                      go to [count]th previous outer open word.  Allows
+[%                      Go to [count]th previous outer open word.  Allows
                         navigation to the start of blocks surrounding the
                         cursor. This is similar to vim's built-in |[(| and |[{|
                         and is an |exclusive| motion (|matchup-feat-exclusive|).
 
                                                          *]%*
-]%                      go to [count]th next outer close word.  Allows
+]%                      Go to [count]th next outer close word.  Allows
                         navigation to the end of blocks surrounding the
-                        cursor. This is similar to vim's built-in |](| and |]{|
+                        cursor. This is similar to vim's built-in |])| and |]}|
                         and is an |exclusive| motion (|matchup-feat-exclusive|).
 
                                                          *z%*
-z%                      go to inside [count]th nearest block.  This is an
+z%                      Go to inside [count]th nearest block.  This is an
                         |exclusive| motion when used with operators,
                         except it eats white-space.  For example, where `█` is
                         the cursor position, >
@@ -131,36 +135,36 @@ z%                      go to inside [count]th nearest block.  This is an
                         param1, param2)
 <
                                                          *v_a%* *a%*
-a%                      select an |any-block|.
+a%                      Select an |any-block|.
                         This closely matches vim's built-in |ab|.
 
                                                          *v_Na%* *Na%*
-{count}a%               select an |open-to-close-block|.
+{count}a%               Select an |open-to-close-block|.
                         When {count} is greater than 1, select the {count}th
                         surrounding open-to-close block.
 
                                                          *v_i%* *i%*
-i%                      select the inside of an |any-block|.
+i%                      Select the inside of an |any-block|.
                         This closely matches vim's built-in |ib|.
                         See also |matchup-feat-linewise|.
 
                                                          *v_Ni%* *Ni%*
-{count}i%               select the inside of an |open-to-close-block|.
+{count}i%               Select the inside of an |open-to-close-block|.
                         When {count} is greater than 1, select the inside of
                         the {count}th surrounding open-to-close block.
 
                                                          *ds%*
-{count}ds%              delete {count}th surrounding matching words.  This
+{count}ds%              Delete {count}th surrounding matching words.  This
                         only works for open and close words.
                         Requires |g:matchup_surround_enabled| = 1.
 
                                                          *cs%*
-{count}cs%              change {count}th surrounding matching words.  This
+{count}cs%              Change {count}th surrounding matching words.  This
                         only works for open and close words.  If vim-surround
                         is installed, you can type replacements according to
                         that plugin's rules.  Otherwise, match-up will give
-                        you the opportunity to type open and close
-                        replacements.
+                        you the opportunity to type a single character.  Some
+                        simple replacement pairs are supported.
                         Requires |g:matchup_surround_enabled| = 1.
 
 ------------------------------------------------------------------------------
@@ -192,21 +196,28 @@ the corresponding default left-hand side will not be mapped.
   -------------------------------------------------------------------------~
    Operator pending maps~
   -------------------------------------------------------------------------~
+   %           |<plug>(matchup-%)|                         o      motion
+     ... And so on for g%, [%, ]%, z%, a%, i% ...
+
+Key: (n) normal, (x) visual, (o) operator-pending (|omap-info|).
+
+Note: Prior to vim 8.1.0648, in order to support motion forcing (see |o_v|, |o_V|,
+|o_CTRL-V|) for each operator-pending map, match-up made four maps corresponding
+to each motion type:
+
+  -------------------------------------------------------------------------~
+   Obsolete operator pending maps~
+  -------------------------------------------------------------------------~
    %           |<plug>(matchup-o_)||<plug>(matchup-%)|       o      motion
    v%          |<plug>(matchup-o_v)||<plug>(matchup-%)|      o      motion
    V%          |<plug>(matchup-o_V)||<plug>(matchup-%)|      o      motion
    <c-v>%      |<plug>(matchup-o_<c-v>)||<plug>(matchup-%)|  o      motion
      ... And so on for g%, [%, ]%, z%, a%, i% ...
 
-Key: (n) normal, (x) visual, (o) operator-pending (|omap-info|).
-
-Note: In order to support motion forcing (see |o_v|, |o_V|, |o_CTRL-V|), for each
-operator-pending map, match-up makes four maps corresponding to each motion
-type.  This means, for example, `d2v%` will work (meaning delete 2 matches
-forward, exclusively), but `dv2%` will not work as you would expect (behavior
-is undefined).  Unfortunately, this is a limitation of vim's operator-pending
-mapping capabilities and if a change is made to vim, match-up will modified
-to simplify these mappings.
+This meant, for example, `d2v%` would work (meaning delete 2 matches forward,
+exclusively), but `dv2%` would not work as you would expect (the behavior is
+undefined).  After vim version 8.1.0648, this limitation of operator-pending
+mapping was lifted and match-up is able to use simplified mappings.
 
 ------------------------------------------------------------------------------
 Features~
@@ -769,7 +780,7 @@ HTML
 
 Customization~
 
-*g:matchup_hotfix_{&filetype}*                                   *matchup-hotfix*
+*g:matchup_hotfix[&filetype]*                                    *matchup-hotfix*
 
   For each file type, this option can be set to the string name of a function
   which will be called when loading files, prior to checking |b:match_words|
@@ -779,7 +790,7 @@ Customization~
     function! VimHotfix()
       " customization
     endfunction
-    let g:matchup_hotfix_vim = 'VimHotfix'
+    let g:matchup_hotfix['vim'] = 'VimHotfix'
 
 *b:matchup_hotfix*
 

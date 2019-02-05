@@ -1479,7 +1479,7 @@ function! s:ColorInit(...) "{{{1
         \ 'term_nroff': ['\%(\(.\)\%u8\1\)\|\%(_\%u8.\)', function("s:PreviewColorNroff"), 'colorizer_nroff', [] ],
         \ 'term_conceal': [ ['\%(\(\%(\%x1b\[0m\)\?\%x1b\[\d\+\%([;:]\d\+\)*\a\)\|\%x1b\[K$\)',
           \ '\%d13', '\%(\%x1b\[K\)', '\%(\%x1b\]\d\+;\d\+;\)', '\%(\%x1b\\\)',
-          \ '\%x1b(B\%x1b\[m', '\%x1b\[m\%x0f', '_\%u8.\@=', '\(.\)\%u8\%(\1\)\@='], 
+          \ '\%x1b(B\%x1b\[m', '\%x1b\[m\%(\%x0f\)\?', '_\%u8.\@=', '\(.\)\%u8\%(\1\)\@='], 
           \ '',
           \ 'colorizer_term_conceal', [] ]
         \ }
@@ -2494,7 +2494,8 @@ function! Colorizer#LocalFTAutoCmds(enable) "{{{1
                         \ Colorizer#ColorLine('', line('w0'), line('w$'))
             au CursorMoved,CursorMovedI <buffer> call Colorizer#ColorLine('',line('.'), line('.'))
             au WinEnter,BufWinEnter <buffer> silent call Colorizer#ColorWinEnter()
-            "au BufLeave <buffer> call Colorizer#ColorOff()
+            " disables colorizing on switching buffers inside a single window
+            au BufLeave <buffer> if !get(g:, 'colorizer_disable_bufleave', 0) | call Colorizer#ColorOff() |endif
             au GUIEnter,ColorScheme <buffer> silent
                         \ call Colorizer#DoColor('!', 1, line('$'))
             if get(g:, 'colorizer_cursormoved', 0)

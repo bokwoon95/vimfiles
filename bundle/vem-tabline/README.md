@@ -109,21 +109,56 @@ nnoremap <leader>8 :8tabnext<CR>
 nnoremap <leader>9 :9tabnext<CR>
 ```
 
+Deleting Buffers
+----------------
+
+If you reorder the buffers in the tabline and then you delete one of them, Vim
+will choose a new buffer to display instead. This will usually be the next
+buffer in Vim's jump list and not necessarily the next one in the tabline. If
+you delete several of them in a row, you don't really know which buffer will be
+selected in the tabline and the resulting effect looks a bit random.
+
+If you want to have the next buffer in the tabline to be selected when you
+delete the current one, you can add something like this to your `vimrc`:
+```
+function! DeleteCurrentBuffer() abort
+    let current_buffer = bufnr('%')
+    let next_buffer = vem_tabline#tabline.get_replacement_buffer()
+    try
+        exec 'confirm ' . current_buffer . 'bdelete'
+        if next_buffer != 0
+            exec next_buffer . 'buffer'
+        endif
+    catch /E516:/
+       " If the operation is cancelled, do nothing
+    endtry
+endfunction
+nmap <leader>x :call DeleteCurrentBuffer()<CR>
+```
+With this, you can press `<leader>x` (typically `\x`), and the current buffer
+will be deleted, and the next one in the tabline selected. If the current
+buffer has unsaved changes, you'll be prompted to confirm.
+
+Of course, you can adapt the snippet to your needs (like using `bwipeout`
+instead of `bdelete`) or choose a different key mapping.
+
 Color Scheme
 ------------
 
 Vem Tabline uses the default colors of your color scheme for rendering the
 tabline. However you may change them using the following highlighting groups:
 
-Highlighting Group    | Default     | Meaning
-----------------------|-------------|------------------------------
-VemTablineSelected    | TabLineSel  | Selected buffer
-VemTablineNormal      | TabLine     | Non selected buffer
-VemTablineShown       | TabLine     | Buffer displayed in window
-VemTablineLocation    | TabLine     | Directory name (when present)
-VemTablineSeparator   | TabLineFill | +X more text
-VemTablineTabSelected | TabLineSel  | Selected tab
-VemTablineTabNormal   | TabLineFill | Non selected tab
+Highlighting Group         | Default     | Meaning
+---------------------------|-------------|----------------------------------------------------------------
+VemTablineNormal           | TabLine     | Non-selected buffers
+VemTablineLocation         | TabLine     | Directory name of a non-selected buffer (when present)
+VemTablineSelected         | TabLineSel  | Currently selected buffer
+VemTablineLocationSelected | TabLineSel  | Directory name of the currently selected buffer (when present)
+VemTablineShown            | TabLine     | Buffers currently being displayed in windows
+VemTablineLocationShown    | TabLine     | Directory name of the buffers being displayed (when present)
+VemTablineSeparator        | TabLineFill | '+X more' text
+VemTablineTabSelected      | TabLineSel  | Selected tab
+VemTablineTabNormal        | TabLineFill | Non selected tab
 
 For example, with the following code you can configure your tabline colors using
 different shades of grey:
@@ -135,10 +170,12 @@ highlight TabLine                    cterm=none ctermfg=255 ctermbg=240 guifg=#2
 highlight TabLineSel                 cterm=bold ctermfg=235 ctermbg=255 guifg=#242424 guibg=#ffffff gui=bold
 highlight TabLineFill                cterm=none ctermfg=255 ctermbg=240 guifg=#e6e3d8 guibg=#404040 gui=italic
 highlight VemTablineNormal           cterm=none ctermfg=255 ctermbg=240 guifg=#242424 guibg=#cdcdcd gui=none
-highlight VemTablineSelected         cterm=bold ctermfg=235 ctermbg=255 guifg=#242424 guibg=#ffffff gui=bold
-highlight VemTablineSeparator        cterm=none ctermfg=246 ctermbg=240 guifg=#e6e3d8 guibg=#404040 gui=italic
 highlight VemTablineLocation         cterm=none ctermfg=255 ctermbg=240 guifg=#666666 guibg=#cdcdcd gui=none
-highlight VemTablineLocationSelected cterm=bold ctermfg=235 ctermbg=255 guifg=#242424 guibg=#ffffff gui=bold
+highlight VemTablineSelected         cterm=bold ctermfg=235 ctermbg=255 guifg=#242424 guibg=#ffffff gui=bold
+highlight VemTablineLocationSelected cterm=bold ctermfg=235 ctermbg=255 guifg=#666666 guibg=#ffffff gui=bold
+highlight VemTablineShown            cterm=none ctermfg=255 ctermbg=240 guifg=#242424 guibg=#cdcdcd gui=none
+highlight VemTablineLocationShown    cterm=none ctermfg=255 ctermbg=240 guifg=#666666 guibg=#cdcdcd gui=none
+highlight VemTablineSeparator        cterm=none ctermfg=246 ctermbg=240 guifg=#e6e3d8 guibg=#404040 gui=italic
 highlight VemTablineTabNormal        cterm=none ctermfg=255 ctermbg=240 guifg=#242424 guibg=#cdcdcd gui=none
 highlight VemTablineTabSelected      cterm=bold ctermfg=235 ctermbg=255 guifg=#242424 guibg=#ffffff gui=bold
 ```

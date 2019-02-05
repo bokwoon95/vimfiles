@@ -557,6 +557,37 @@ nmap <C-c><C-s> <Plug>SlimeLineSend
 "{{{ vim-matchup
 let g:matchup_matchparen_status_offscreen = 0
 "}}}
+"{{{ CtrlSF
+nnoremap <Leader>cf :CtrlSF<Space>
+nmap <Leader>sf <Plug>CtrlSFCwordExec
+xmap <Leader>sf <Plug>CtrlSFVwordExec
+let g:ctrlsf_position = 'bottom'
+let g:ctrlsf_auto_focus = {
+    \ "at": "start"
+    \ }
+let g:ctrlsf_auto_close = {
+    \ "normal" : 1,
+    \ "compact": 1
+    \}
+let g:ctrlsf_default_view_mode = 'normal'
+let g:ctrlsf_mapping = {
+            \"open"    : ["<CR>", "o"],
+            \"openb"   : "O",
+            \"split"   : "<C-O>",
+            \"vsplit"  : "",
+            \"tab"     : "t",
+            \"tabb"    : "T",
+            \"popen"   : "p",
+            \"popenf"  : "P",
+            \"quit"    : "<C-g>",
+            \"next"    : "<C-n>",
+            \"prev"    : "<C-p>",
+            \"pquit"   : "<C-g>",
+            \"loclist" : "",
+            \"chgmode" : "M",
+            \"stop"    : "<C-C>"
+            \}
+"}}}
 "}}}
 
 syntax enable
@@ -592,13 +623,17 @@ augroup Checkt
   autocmd FocusGained,BufEnter * checktime " To trigger vim's autoread on focus gained or buffer enter
 augroup END
 autocmd! Filetype vim setlocal foldmethod=marker ts=2 sts=2 sw=2 et
+command! GMS /^<<<<<<< .*$\|^>>>>>>> .*$\|^=======$
 set foldtext=repeat('\ ',indent(v:foldstart)).foldtext()
 set infercase
 if !empty(glob('~/.vim/words'))
   set dictionary+=~/.vim/words
+  set spellfile=~/.vim/spell/en.utf-8.add
 elseif !empty(glob('~/vimfiles/words'))
   set dictionary+=~/vimfiles/words
+  set spellfile=~/vimfiles/spell/en.utf-8.add
 endif
+set spellcapcheck=
 
 " Survival Pack
 noremap <C-j> 5gj
@@ -608,7 +643,7 @@ noremap <C-l> 4<C-e>
 nnoremap <C-x>b :ls<CR>:b<Space>
 cnoremap <silent> <expr> <CR> getcmdline() == "b " ? "\<C-c>:b#\<CR>" : "\<CR>"
 nnoremap <C-x><C-h> :setlocal hlsearch!<bar>set hlsearch?<CR>
-inoremap <expr> <C-y> !pumvisible() ? "\<C-o>:set paste\<CR>\<C-r>+\<C-o>:set nopaste\<CR>\<Esc>'[=']i" : "\<C-y>"
+inoremap <expr> <C-y> !pumvisible() ? "\<C-o>mm\<C-o>:set paste\<CR>\<C-r>+\<C-o>:set nopaste\<CR>\<Esc>'[=']`mi" : "\<C-y>"
 command! TT verbose setlocal ts? sts? sw? et?
 command! T2 setlocal ts=2 sts=2 sw=2 et | echo "indentation set to 2 spaces"
 command! T4 setlocal ts=4 sts=4 sw=4 et | echo "indentation set to 4 spaces"
@@ -720,28 +755,17 @@ nnoremap <expr> <C-x><C-r> &diff ? "
             \:silent! call win_gotoid(g:prevwin)<CR>
             \:silent! call winrestview(b:wsv)<CR>
             \": ""
-nnoremap <expr> <C-x><C-d> &diff ?
-            \"dd<C-w><C-w>yy<C-w><C-p>Pj"
-            \: ""
-nnoremap <expr> <C-x><C-x><C-d> &diff ? "
-            \:let g:prevwin=win_getid()<CR>
-            \:let b:wsv=winsaveview()<CR>
-            \dd<C-w><C-w>yy<C-w><C-p>Pj
-            \:windo diffoff<CR>:windo diffthis<CR>
-            \:silent! call win_gotoid(g:prevwin)<CR>
-            \:silent! call winrestview(b:wsv)<CR>
-            \": ""
+nnoremap <expr> <C-x><C-d> &diff ? ":diffget<CR>" : ""
 cnoremap <C-j> <Down>
 nnoremap gh `[v`]| "Select last pasted text
 nnoremap <expr> <C-c><C-c> bufname("") == "[Command Line]" ? ":close<CR>" : ""
 " cnoremap sudow w !sudo tee % >/dev/null
 fun! DuplicateLineSavePosition() abort
-    let colnum = col('.')
+    let colnum = virtcol('.')
     execute "normal! yyp".colnum."|"
 endfun
-inoremap <C-l> <Esc>`^:call DuplicateLineSavePosition()<CR>a<C-g>u
+inoremap <C-l> <Esc>:call DuplicateLineSavePosition()<CR>a<C-g>u
 command! Gitmergesearch let @/="^<<<<<<< .*$\\|^>>>>>>> .*$\\|^=======$"
-command! GMS /^<<<<<<< .*$\|^>>>>>>> .*$\|^=======$
 fun! Checkt(...) abort
   let checkt_all = a:0 >= 1 ? a:1 : 0
   if checkt_all==1
@@ -773,6 +797,8 @@ cnoremap <M-v>im <Home><S-Right><Right><C-\>estrpart(getcmdline(),0,getcmdpos()-
       \~/.vim/<C-d>
 cnoremap <M-d>oc <Home><S-Right><Right><C-\>estrpart(getcmdline(),0,getcmdpos()-1)<CR>
       \~/Documents/<C-d>
+cnoremap <M-d>bo <Home><S-Right><Right><C-\>estrpart(getcmdline(),0,getcmdpos()-1)<CR>
+      \~/Dropbox/<C-d>
 cnoremap <M-d>dc <Home><S-Right><Right><C-\>estrpart(getcmdline(),0,getcmdpos()-1)<CR>
       \~/Dropbox/Documents/<C-d>
 cnoremap <M-d>w <Home><S-Right><Right><C-\>estrpart(getcmdline(),0,getcmdpos()-1)<CR>
@@ -855,7 +881,10 @@ nnoremap <C-c> <NOP>| "Disable default C-c behavior to use it for custom mapping
 nnoremap <C-x> <NOP>| "Disable default C-x behavior to use it for custom mappings
 cnoremap <expr> <C-g> getcmdtype() == "/" \|\| getcmdtype() == "?" ? "<C-g>" : "<C-c><Esc>"
 nnoremap <expr> <C-g> bufname("") =~ "NERD_tree_\\d"  ? ":NERDTreeToggle<CR>" :
-                    \ bufname("") == "[Command Line]" ? ":close<CR>" : "<C-g>"
+                    \ bufname("") == "[Command Line]" ? ":close<CR>" :
+                    \ &filetype == "godoc" ? ":close<CR>" :
+                    \ getwininfo(win_getid())[0]['quickfix'] ? ":cclose<CR>" :
+                    \ getwininfo(win_getid())[0]['loclist'] ? ":lclose<CR>" : "<C-g>"
                     " see :h expression-syntax for why =~ over ==
 "undo
 inoremap <C-_> <C-o>u<C-o>u
@@ -933,6 +962,10 @@ nnoremap ]wd :let b:wsv=winsaveview()<CR>
       \:silent! call winrestview(b:wsv)<CR>
 nnoremap [on :setlocal number<CR>
 nnoremap ]on :setlocal nonumber<CR>
+nnoremap [oc :setlocal cursorline<CR>
+nnoremap ]oc :setlocal nocursorline<CR>
+nnoremap [ov :setlocal virtualedit=all<CR>
+nnoremap ]ov :setlocal virtualedit=<CR>
 nnoremap [b :bprev<CR>
 nnoremap ]b :bnext<CR>
 nnoremap [l :lprevious<CR>
@@ -983,41 +1016,44 @@ inoreabbr \date\ <C-r>=strftime("%d-%b-%Y")<CR><C-r>=Eatchar('\m\s\<Bar>/')<CR>
 "{{{ Views
 set viewoptions=folds "let vop save only folds, and nothing else
 fun! Makeview(...) abort
-  let force_makeview = a:0 >= 1 ? a:1 : 0
-  let viewfile = expand('%:p:h') . "/v__" . expand('%:t:r') . expand('%:e')
-  let viewfolder = expand('%:p:h') . "/.v__views"
-  let viewfile = viewfolder . "/v__" . expand('%:t:r') . expand('%:e')
-  if filereadable(viewfile) || force_makeview==1
-    if force_makeview==1 "I suspect this is a bug that the cursor keeps gg-ing
-      execute "execute mkdir('" . viewfolder . "', 'p')"
+  let b:force_makeview = a:0 >= 1 ? a:1 : 0
+  let b:viewfolder = expand('%:p:h') . "/.v__views"
+  let b:viewfile = b:viewfolder . "/v__" . expand('%:t:r') . expand('%:e')
+  if filereadable(b:viewfile) || b:force_makeview==1
+    if b:force_makeview==1 "I suspect this is a bug that the cursor keeps gg-ing
+      execute "execute mkdir('" . b:viewfolder . "', 'p')"
     endif
-    execute "mkview! ".viewfile
-    execute "keepalt split ".viewfile
-    execute 'norm! 3G"_dd'
-    execute "w| bd"
-    if force_makeview==1
-      echo "saved view in ".viewfile
+    let w:v = winsaveview()
+    execute "mkview! ".b:viewfile
+    execute "keepalt vsplit ".b:viewfile."| 3d _| w| bd"
+    if b:force_makeview==1
+      echo "saved view in ".b:viewfile
     endif
+    call winrestview(w:v)
   endif
 endfun
-fun! Loadview() abort
-  let viewfile = expand('%:p:h') . "/v__" . expand('%:t:r') . expand('%:e')
-  let viewfolder = expand('%:p:h') . "/.v__views"
-  let viewfile = viewfolder . "/v__" . expand('%:t:r') . expand('%:e')
-  if filereadable(viewfile)
-    execute "silent! source ".viewfile
-    echo "loaded view from ".viewfile
+fun! Loadview(...) abort
+  let b:force_loadview = a:0 >= 1 ? a:1 : 0
+  let b:viewfolder = expand('%:p:h') . "/.v__views"
+  let b:viewfile = b:viewfolder . "/v__" . expand('%:t:r') . expand('%:e')
+  if filereadable(b:viewfile)
+    execute "silent! source ".b:viewfile
+    if b:force_loadview==1
+      echo "viewfile loaded from: ".b:viewfile
+    endif
   else
     " this else conditional is for debugging purposes
-    echo "viewfile not found in: ".viewfile
+    echo "viewfile not found in: ".b:viewfile
   endif
 endfun
 command! Mkview call Makeview(1)
 command! MKV call Makeview(1)
-command! LDV call Loadview()
+command! LDV call Loadview(1)
 augroup AutosaveView
   autocmd!
-  au BufWrite,VimLeave * call Makeview()
+  au BufWrite,VimLeave * silent! call Makeview()
+  " au BufWinLeave,VimLeave * silent! call Makeview()
+  "    ^^^using bufwinleave triggers some buffer deleted unexpectedly by autocmd error
   au BufRead * silent! call Loadview()
 augroup END
 "}}}
@@ -1060,6 +1096,7 @@ function! MyHighlights() abort
   hi StatusLineNC ctermfg=103 ctermbg=none cterm=none,underline guibg=bg gui=underline
   hi SpellBad ctermbg=234 ctermfg=15 cterm=bold,underline
   hi SpellCap ctermbg=234 ctermfg=14 cterm=underline
+  hi ALEErrorLine cterm=bold,underline
   hi SignColumn ctermbg=none
   hi ColorColumn ctermbg=234 guibg=grey85
   hi SpecialKey term=bold ctermfg=237 guifg=Grey70
@@ -1092,9 +1129,10 @@ if has('gui_running')
   set laststatus=1
   set guioptions=
   set belloff=all
-  set linespace=2
   if has('macunix')
-    set guifont=Source\ Code\ Pro:h12
+    set linespace=1
+    " set guifont=Source\ Code\ Pro:h12
+    set guifont=Go\ Mono:h12
   elseif has('unix')
     set guifont=DejaVu\ Sans\ Mono\ Book
     set lines=40 columns=150
@@ -1113,6 +1151,7 @@ if !has("gui_running")
     set guicursor=n-v-c:block,i-ci-ve:ver25,r-cr:hor20,o:hor50
           \,a:blinkwait700-blinkoff400-blinkon250-Cursor/lCursor
           \,sm:block-blinkwait175-blinkoff150-blinkon175
+    lang en_US.UTF-8
   else
     set ttimeoutlen=10
   endif
@@ -1210,7 +1249,7 @@ function! Redir(cmd)
     execute a:cmd
     redir END
   endif
-  new
+  vnew
   let w:scratch = 1
   setlocal buftype=nofile bufhidden=wipe nobuflisted noswapfile nonumber
   call setline(1, split(output, "\n"))
@@ -1228,12 +1267,12 @@ if !has('nvim')
     autocmd!
     autocmd BufWinEnter,BufEnter,WinEnter * if &buftype ==# "terminal" |startinsert| endif
   augroup END
-  tnoremap <c-w><c-[> <c-\><c-n>
-  nnoremap <expr> <c-w><c-i> &buftype ==# 'terminal' ? "i" : ""
-  nnoremap <expr> <c-w><c-a> &buftype ==# 'terminal' ? "a" : ""
-  tnoremap <c-x><c-b> <c-\><c-n>:ls<cr>:b<space>
-  tnoremap <c-q> <c-\><c-n>:bp<cr>
-  tnoremap <c-s> <c-\><c-n>:bn<cr>
-  cabbrev termm term ++curwin
+  silent! tnoremap <c-w><c-[> <c-\><c-n>
+  silent! nnoremap <expr> <c-w><c-i> &buftype ==# 'terminal' ? "i" : ""
+  silent! nnoremap <expr> <c-w><c-a> &buftype ==# 'terminal' ? "a" : ""
+  silent! tnoremap <c-x><c-b> <c-\><c-n>:ls<cr>:b<space>
+  silent! tnoremap <c-q> <c-\><c-n>:bp<cr>
+  silent! tnoremap <c-s> <c-\><c-n>:bn<cr>
+  silent! cabbrev termm term ++curwin
 endif
 "}}}

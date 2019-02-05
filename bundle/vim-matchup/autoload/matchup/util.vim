@@ -19,6 +19,7 @@ function! matchup#util#command(cmd) " {{{1
 endfunction
 
 " }}}1
+
 function! matchup#util#in_comment(...) " {{{1
   return call('matchup#util#in_syntax', ['^Comment$'] + a:000)
 endfunction
@@ -40,13 +41,13 @@ function! matchup#util#in_syntax(name, ...) " {{{1
   let l:pos = a:0 > 0 ? [a:1, a:2] : [line('.'), col('.')]
 
   " check syntax at position
-  " this is closer to the method used by most ftplugins
-  let l:syn = synIDattr(synID(l:pos[0], l:pos[1], 1), 'name')
-  return l:syn =~? a:name
+  let l:syn = map(synstack(l:pos[0], l:pos[1]),
+         \  "synIDattr(synIDtrans(v:val), 'name')")
+  return match(l:syn, '\c'.a:name) >= 0
 
-  " let l:syn = map(synstack(l:pos[0], l:pos[1]),
-  "        \  "synIDattr(synIDtrans(v:val), 'name')")
-  " return match(l:syn, a:name) >= 0
+  " this is closer to the method used by most ftplugins
+  " let l:syn = synIDattr(synID(l:pos[0], l:pos[1], 1), 'name')
+  " return l:syn =~? a:name
 endfunction
 
 " }}}1
@@ -131,6 +132,16 @@ endfunction
 function! matchup#util#check_match_words(sha256) " {{{1
   if !exists('b:match_words') | return 0 | endif
   return sha256(b:match_words) =~# '^'.a:sha256
+endfunction
+
+" }}}1
+function! matchup#util#append_match_words(str) abort " {{{1
+  if !exists('b:match_words') | return | endif
+
+  if len(b:match_words) && b:match_words[-1] !=# ',' && a:str[0] !=# ','
+    let b:match_words .= ','
+  endif
+  let b:match_words .= a:str
 endfunction
 
 " }}}1
