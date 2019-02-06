@@ -1,7 +1,103 @@
-silent! execute pathogen#infect()
-syntax on
-filetype plugin indent on
+"{{{ Plugin Manager Initialization
+silent! set encoding=utf-8
+silent! scriptencoding utf-8
+silent! set fileencoding=utf-8
+if !empty(glob('~/vimfiles/autoload/pathogen.vim')) || !empty(glob('~/.vim/autoload/pathogen.vim'))
+  silent! execute pathogen#infect()
+  syntax on
+  filetype plugin indent on
+else
+  if empty(glob('~/.vim/autoload/plug.vim'))
+    silent !curl -fLo ~/.vim/autoload/plug.vim --create-dirs
+          \ https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+    autocmd VimEnter * PlugInstall --sync | source $MYVIMRC
+  endif
+  if has('nvim') && empty(glob('~/.local/share/nvim/site/autoload/plug.vim'))
+    silent !curl -fLo ~/.local/share/nvim/site/autoload/plug.vim --create-dirs
+          \ https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+  endif
+endif
+"}}}
 
+let mapleader = "\<Space>"
+silent! set macmeta
+
+"{{{ Meta for Terminal Vim
+if !has("gui_running") && !has('nvim')
+  "Bind selected meta for selected keys: dbfnp<BS> hjkl vecyq
+  silent! exe "set <S-Left>=\<Esc>b"
+  silent! exe "set <S-Right>=\<Esc>f"
+  silent! exe "set <F31>=\<Esc>d"| "M-d
+  map! <F31> <M-d>
+  map <F31> <M-d>
+  silent! exe "set <F32>=\<Esc>n"| "M-n
+  map! <F32> <M-n>
+  map <F32> <M-n>
+  silent! exe "set <F33>=\<Esc>p"| "M-p
+  map! <F33> <M-p>
+  map <F33> <M-p>
+  silent! exe "set <F34>=\<Esc>\<C-?>"| "M-BS
+  map! <F34> <M-BS>
+  map <F34> <M-BS>
+  silent! exe "set <F35>=\<Esc>\<C-H>"| "M-BS
+  map! <F35> <M-BS>
+  map <F35> <M-BS>
+  silent! exe "set <F13>=\<Esc>h"| "M-h
+  map! <F13> <M-h>
+  map <F13> <M-h>
+  silent! exe "set <F14>=\<Esc>j"| "M-j
+  map! <F14> <M-j>
+  map <F14> <M-j>
+  silent! exe "set <F15>=\<Esc>k"| "M-k
+  map! <F15> <M-k>
+  map <F15> <M-k>
+  silent! exe "set <F16>=\<Esc>l"| "M-l
+  map! <F16> <M-l>
+  map <F16> <M-l>
+  silent! exe "set <F17>=\<Esc>v"| "M-v
+  map! <F17> <M-v>
+  map <F17> <M-v>
+  silent! exe "set <F18>=\<Esc>e"| "M-e
+  map! <F18> <M-e>
+  map <F18> <M-e>
+  silent! exe "set <F19>=\<Esc>c"| "M-c
+  map! <F19> <M-c>
+  map <F19> <M-c>
+  silent! exe "set <F20>=\<Esc>y"| "M-y
+  map! <F20> <M-y>
+  map <F20> <M-y>
+  silent! exe "set <F21>=\<Esc>q"| "M-q
+  map! <F21> <M-q>
+  map <F21> <M-q>
+  silent! exe "set <F22>=\<Esc>7"| "M-7
+  map! <F22> <M-7>
+  map <F22> <M-7>
+  silent! exe "set <F23>=\<Esc>8"| "M-8
+  map! <F23> <M-8>
+  map <F23> <M-8>
+  silent! exe "set <F24>=\<Esc>9"| "M-9
+  map! <F24> <M-9>
+  map <F24> <M-9>
+  silent! exe "set <F25>=\<Esc>0"| "M-0
+  map! <F25> <M-0>
+  map <F25> <M-0>
+  silent! exe "set <F26>=\<Esc>;"| "M-;
+  map! <F26> <M-;>
+  map <F26> <M-;>
+  silent! exe "set <F27>=\<Esc>'"| "M-'
+  map! <F27> <M-'>
+  map <F27> <M-'>
+endif
+if has('macunix')
+  set shell=/bin/zsh
+elseif has('unix')
+  if executable('zsh')
+    set shell=/usr/bin/zsh
+  else
+    set shell=/bin/bash
+  endif
+endif
+"}}}
 "{{{ Hardcoded defaults
 "{{{ moll/vim-bbye
 function! s:bdelete(action, bang, buffer_name)
@@ -88,7 +184,7 @@ function! s:error(msg)
 endfunction
 
 command! -bang -complete=buffer -nargs=? Bdelete
-  \ :call s:bdelete("bdelete", <q-bang>, <q-args>)
+      \ :call s:bdelete("bdelete", <q-bang>, <q-args>)
 "}}}
 nnoremap <Leader>bd :Bdelete<CR>
 "{{{ 907th/vim-auto-save
@@ -406,9 +502,9 @@ command! -bar -bang -complete=file -nargs=? SudoEdit
       \ endif
 
 if exists(':SudoWrite') != 2
-command! -bar SudoWrite
-      \ call s:SudoSetup(expand('%:p')) |
-      \ write!
+  command! -bar SudoWrite
+        \ call s:SudoSetup(expand('%:p')) |
+        \ write!
 endif
 
 function! s:SudoEditInit() abort
@@ -444,8 +540,8 @@ function! s:Wall() abort
     write
   endif
   tabdo windo if !&readonly && &buftype =~# '^\%(acwrite\)\=$' && expand('%') !=# '' && !has_key(seen, bufnr('')) | silent write | let seen[bufnr('')] = 1 | endif
-  execute 'tabnext '.tab
-  execute win.'wincmd w'
+execute 'tabnext '.tab
+execute win.'wincmd w'
 endfunction
 
 augroup eunuch
@@ -567,30 +663,30 @@ nmap <Leader>sf <Plug>CtrlSFCwordExec
 xmap <Leader>sf <Plug>CtrlSFVwordExec
 let g:ctrlsf_position = 'bottom'
 let g:ctrlsf_auto_focus = {
-    \ "at": "start"
-    \ }
+      \ "at": "start"
+      \ }
 let g:ctrlsf_auto_close = {
-    \ "normal" : 1,
-    \ "compact": 1
-    \}
+      \ "normal" : 1,
+      \ "compact": 1
+      \}
 let g:ctrlsf_default_view_mode = 'normal'
 let g:ctrlsf_mapping = {
-            \"open"    : ["<CR>", "o"],
-            \"openb"   : "O",
-            \"split"   : "<C-O>",
-            \"vsplit"  : "",
-            \"tab"     : "t",
-            \"tabb"    : "T",
-            \"popen"   : "p",
-            \"popenf"  : "P",
-            \"quit"    : "<C-g>",
-            \"next"    : "<C-n>",
-            \"prev"    : "<C-p>",
-            \"pquit"   : "<C-g>",
-            \"loclist" : "",
-            \"chgmode" : "M",
-            \"stop"    : "<C-C>"
-            \}
+      \"open"    : ["<CR>", "o"],
+      \"openb"   : "O",
+      \"split"   : "<C-O>",
+      \"vsplit"  : "",
+      \"tab"     : "t",
+      \"tabb"    : "T",
+      \"popen"   : "p",
+      \"popenf"  : "P",
+      \"quit"    : "<C-g>",
+      \"next"    : "<C-n>",
+      \"prev"    : "<C-p>",
+      \"pquit"   : "<C-g>",
+      \"loclist" : "",
+      \"chgmode" : "M",
+      \"stop"    : "<C-C>"
+      \}
 "}}}
 "}}}
 
@@ -696,7 +792,7 @@ nnoremap <silent> <expr> j v:count == 0 ? "gj" : "j"
 onoremap <silent> <expr> k gk
 onoremap <silent> <expr> j gj
 noremap <expr> <CR> bufname("") == "[Command Line]" ? "<CR>"  :
-                  \ v:count == 0                    ? "<Tab>" : "Gzz"
+      \ v:count == 0                    ? "<Tab>" : "Gzz"
 "}}}
 "{{{ Macros
 nnoremap <M-;> 5zh
@@ -706,9 +802,9 @@ xnoremap <Leader>ss :s//g<Left><Left>
 xnoremap <Leader>tbts :s/	/    /g<Left><Left>| "convert tab to 4 spaces for visual selection
 nnoremap <Leader>tbts :%s/	/    /g<Left><Left>| "convert tab to 4 spaces in normal mode
 nnoremap <Leader>rr :let b:wsv=winsaveview()<CR>
-            \gg=G
-            \:silent! call winrestview(b:wsv)<CR>
-            \:echo 'File reindented'<CR>| "reindent file without losing cursor position
+      \gg=G
+      \:silent! call winrestview(b:wsv)<CR>
+      \:echo 'File reindented'<CR>| "reindent file without losing cursor position
 nnoremap <M-v> ^vg_| "V but w/o newline char
 nnoremap yd ^yg_"_dd| "dd but w/o newline char
 noremap <M-d> "_d| "Black_hole delete without saving to register
@@ -746,537 +842,537 @@ nnoremap cr :call ChangeReg()<CR>| "cr<register alphabet> to edit the register
 nnoremap <expr> <BS> &diff && &readonly ? ":qa!<CR>" : "<C-^>"
 nnoremap <M-q> @q
 " xnoremap <Leader>ttt :s/\v<\a/\u&/g<CR>| " Fast and dirty titlecasing
-  "^basic titlecase (does not work on anything other than all small caps)
-  "https://taptoe.wordpress.com/2013/02/06/vim-capitalize-every-first-character-of-every-word-in-a-sentence/
+"^basic titlecase (does not work on anything other than all small caps)
+"https://taptoe.wordpress.com/2013/02/06/vim-capitalize-every-first-character-of-every-word-in-a-sentence/
 xnoremap <Leader>ttc gugv:s/\v^\a\|\:\s\a\|<%(in>\|the>\|at>\|with>\|a>\|and>\|for>\|of>\|on>\|from>\|by>)@!\a/\U&/g<CR>
   "^titlecase that excludes words in the list (also works on all types of caps by converting eveything to small caps first)
   ":s/\v^\a|\:\s\a|<%(in>|the>|at>|with>|a>|and>|for>|of>|on>|from>|by>)@!\a/\U&/g
   "^ the bar characters must be escaped ie '\|'
-nnoremap <expr> <C-x><C-r> &diff ? "
-            \:let g:prevwin=win_getid()<CR>
-            \:let b:wsv=winsaveview()<CR>
-            \:windo diffoff<CR>:windo diffthis<CR>
-            \:silent! call win_gotoid(g:prevwin)<CR>
-            \:silent! call winrestview(b:wsv)<CR>
-            \": ""
-nnoremap <expr> <C-x><C-d> &diff ? ":diffget<CR>" : ""
-cnoremap <C-j> <Down>
-nnoremap gh `[v`]| "Select last pasted text
-nnoremap <expr> <C-c><C-c> bufname("") == "[Command Line]" ? ":close<CR>" : ""
-" cnoremap sudow w !sudo tee % >/dev/null
-fun! DuplicateLineSavePosition() abort
+  nnoremap <expr> <C-x><C-r> &diff ? "
+        \:let g:prevwin=win_getid()<CR>
+        \:let b:wsv=winsaveview()<CR>
+        \:windo diffoff<CR>:windo diffthis<CR>
+        \:silent! call win_gotoid(g:prevwin)<CR>
+        \:silent! call winrestview(b:wsv)<CR>
+        \": ""
+  nnoremap <expr> <C-x><C-d> &diff ? ":diffget<CR>" : ""
+  cnoremap <C-j> <Down>
+  nnoremap gh `[v`]| "Select last pasted text
+  nnoremap <expr> <C-c><C-c> bufname("") == "[Command Line]" ? ":close<CR>" : ""
+  " cnoremap sudow w !sudo tee % >/dev/null
+  fun! DuplicateLineSavePosition() abort
     let colnum = virtcol('.')
     execute "normal! yyp".colnum."|"
-endfun
-inoremap <C-l> <Esc>:call DuplicateLineSavePosition()<CR>a<C-g>u
-command! Gitmergesearch let @/="^<<<<<<< .*$\\|^>>>>>>> .*$\\|^=======$"
-fun! Checkt(...) abort
-  let checkt_all = a:0 >= 1 ? a:1 : 0
-  if checkt_all==1
-    let currbufnr = bufnr("%")
-    silent! bufdo checktime
-    execute "buffer" . currbufnr
-  else
-    silent! checktime
-  endif
-  echo "+++ Buffer Refreshed +++"
-endfun
-command! EE call Checkt()
-command! EA call Checkt(1)
-xmap <S-Tab> %
-inoremap <C-g><C-d> <C-d>| "C-t indents, C-g C-d de-indents in insert mode
-"}}}
-"{{{ Wildmenu Macros
-nnoremap <M-e> :e<Space><C-d>
-cnoremap <M-e> <Home><S-Right><C-w>e<End><C-d>
-nnoremap <M-c>d :cd<Space><C-d>
-cnoremap <M-c>d <Home><S-Right><C-w>cd<End><C-d>
-cnoremap %% <Home><S-Right><S-Right><C-\>estrpart(getcmdline(),0,getcmdpos()-1)<CR>
-      \<C-r>=expand('%:h').'/'<CR><C-d>
-cnoremap <M-h> <Home><S-Right><Right><C-\>estrpart(getcmdline(),0,getcmdpos()-1)<CR>
-      \~/<C-d>
-cnoremap <M-d>k <Home><S-Right><Right><C-\>estrpart(getcmdline(),0,getcmdpos()-1)<CR>
-      \~/Desktop/<C-d>
-cnoremap <M-v>im <Home><S-Right><Right><C-\>estrpart(getcmdline(),0,getcmdpos()-1)<CR>
-      \~/.vim/<C-d>
-cnoremap <M-d>oc <Home><S-Right><Right><C-\>estrpart(getcmdline(),0,getcmdpos()-1)<CR>
-      \~/Documents/<C-d>
-cnoremap <M-d>bo <Home><S-Right><Right><C-\>estrpart(getcmdline(),0,getcmdpos()-1)<CR>
-      \~/Dropbox/<C-d>
-cnoremap <M-d>dc <Home><S-Right><Right><C-\>estrpart(getcmdline(),0,getcmdpos()-1)<CR>
-      \~/Dropbox/Documents/<C-d>
-cnoremap <M-d>w <Home><S-Right><Right><C-\>estrpart(getcmdline(),0,getcmdpos()-1)<CR>
-      \~/Downloads/<C-d>
-nnoremap <Leader>nv :e<Space>~/.config/nvim/init.vim<CR>
-nnoremap <Leader>iv :e<Space>~/.vim/vimrc<CR>
-"}}}
-"{{{ UTF8 Macros
-inoremap <M-q><M-a> <C-v>u25c6<Space>| "◆ Db
-inoremap <M-q><M-b> <C-v>u2022<Space>| "•
-  inoremap <M-q>b <C-v>u2022<Space>| "•
-inoremap <M-q><M-c> <C-v>u25e6<Space>| "◦
-inoremap <M-q><M-d> <C-v>u25c7<Space>| "◇ Dw
-inoremap <M-q><M-l> <C-v>u2502| "│ vv
-inoremap <M-q><M-=> <C-v>u2713| "✓ OK
-inoremap <M-q><M--> <C-v>u2717| "✗ XX
-" ▸ u25b8
-" ▹ u25b9
-" ■ u25a0
-" □ u25a1
-":h digraph-table for a list of utf8 digraphs you can insert in vim
-"}}}
-"{{{ Buffer Management
-nnoremap <M-s> :bn<CR>
-nnoremap <M-a> :bp<CR>
-nnoremap <C-s> :bn<CR>
-nnoremap <C-q> :bp<CR>
-nnoremap gb :buffers<CR>:buffer<Space>
-" nnoremap <Leader>xbd :bp<bar>bd#<CR>| "bd w/o closing window
-if !empty(globpath(&rtp, 'plugin/vem_tabline.vim'))
-  if g:vem_tabline_show == 1
-    nmap <Leader><Down> <Plug>vem_move_buffer_right-
-    nmap <Leader><Up> <Plug>vem_move_buffer_left-
-    nmap <Leader><Right> <Plug>vem_next_buffer-
-    nmap <Leader><Left> <Plug>vem_prev_buffer-
-    nmap <S-Down> <Plug>vem_move_buffer_right-
-    nmap <S-Up> <Plug>vem_move_buffer_left-
-    nmap <C-s> <Plug>vem_next_buffer-
-    nmap <C-q> <Plug>vem_prev_buffer-
-  endif
-endif
-"}}}
-"{{{ Tab Management
-nnoremap <Leader>tn :tabnew<CR>
-nnoremap <Leader>tc :tabclose<CR>
-nnoremap <Leader>te :tabedit<Space>%<CR><C-o>
-"}}}
-"{{{ Window Management
-set splitright splitbelow " Prefer opening new splits to the right and below
-nnoremap <expr> <C-w><C-q> &diff ? ":diffoff!<Bar>close<CR>" : "<C-w>c"
-nnoremap <expr> <C-w><C-c> &diff ? ":diffoff!<Bar>close<CR>" : "<C-w>c"
-nnoremap <expr> <C-w>c &diff ? ":diffoff!<Bar>close<CR>" : "<C-w>c"
-nnoremap <expr> <C-w><C-o> &diff ? ":diffoff!<Bar>only<CR>" : "<C-w>o"
-nnoremap <C-w><C-e> :enew<CR>
-nnoremap <M-7> <C-w><
-nnoremap <M-0> <C-w>>
-nnoremap <M-8> <C-w>-
-nnoremap <M-9> <C-w>+
-nnoremap <M-(> 200<C-w>+
-nnoremap <M-j> <C-w><C-j>
-nnoremap <M-k> <C-w><C-k>
-nnoremap <M-l> <C-w><C-l>
-nnoremap <M-h> <C-w><C-h>
-nnoremap <M-\> <C-w><C-p>
-if !empty(globpath(&rtp, 'plugin/tmux_navigator.vim'))
-  nnoremap <silent> <M-h> :TmuxNavigateLeft<CR>
-  nnoremap <silent> <M-j> :TmuxNavigateDown<CR>
-  nnoremap <silent> <M-k> :TmuxNavigateUp<CR>
-  nnoremap <silent> <M-l> :TmuxNavigateRight<CR>
-  nnoremap <silent> <M-\> :TmuxNavigatePrevious<CR>
-  inoremap <silent> <M-h> <C-o>:TmuxNavigateLeft<CR>
-  inoremap <silent> <M-j> <C-o>:TmuxNavigateDown<CR>
-  inoremap <silent> <M-k> <C-o>:TmuxNavigateUp<CR>
-  inoremap <silent> <M-l> <C-o>:TmuxNavigateRight<CR>
-  inoremap <silent> <M-\> <C-o>:TmuxNavigatePrevious<CR>
-endif
-"}}}
-"{{{ Emacs Emulation
-nnoremap <C-c> <NOP>| "Disable default C-c behavior to use it for custom mappings
-nnoremap <C-x> <NOP>| "Disable default C-x behavior to use it for custom mappings
-cnoremap <expr> <C-g> getcmdtype() == "/" \|\| getcmdtype() == "?" ? "<C-g>" : "<C-c><Esc>"
-nnoremap <expr> <C-g> bufname("") =~ "NERD_tree_\\d"  ? ":NERDTreeToggle<CR>" :
-                    \ bufname("") == "[Command Line]" ? ":close<CR>" :
-                    \ &filetype == "godoc" ? ":close<CR>" :
-                    \ getwininfo(win_getid())[0]['quickfix'] ? ":cclose<CR>" :
-                    \ getwininfo(win_getid())[0]['loclist'] ? ":lclose<CR>" : "<C-g>"
-                    " see :h expression-syntax for why =~ over ==
-"undo
-inoremap <C-_> <C-o>u<C-o>u
-inoremap <CR> <C-g>u<CR>
-"movement
-inoremap <C-b> <Left>
-inoremap <expr> <C-n> pumvisible() ? "<Down>": "<C-o>gj"
-inoremap <expr> <C-p> pumvisible() ? "<Up>": "<C-o>gk"
-inoremap <expr> <C-M-n> pumvisible() ? "<Down><Down><Down>": "<C-o>5gj"
-inoremap <expr> <C-M-p> pumvisible() ? "<Up><Up><Up>": "<C-o>5gk"
-inoremap <C-f> <Right>
-inoremap <M-f> <S-Right>
-inoremap <M-b> <S-Left>
-inoremap <C-a> <C-c>I
-inoremap <C-e> <End>
-"forward delete, backward delete & character delete
-inoremap <M-d> <C-g>u<C-o>vec<C-g>u
-inoremap <M-BS> <C-g>u<C-w><C-g>u
-inoremap <C-BS> <C-g>u<C-w><C-g>u
-inoremap <C-w> <C-g>u<C-w><C-g>u
-inoremap <C-d> <Del>
-"kill to EOL, kill to SOL, and kill entire line
-inoremap <C-k> <C-o>D
-inoremap <C-M-k> <C-k>| "C-M-k replaces C-k for entering digraphs
-"save
-inoremap <C-x><C-s> <C-o>:w<CR>
-nnoremap <C-x><C-s> :w<CR>
-"paste from vim register
-inoremap <M-y> \<C-o>:set paste\<CR>\<C-r>"\<C-o>:set nopaste\<CR>
-"emacs misc
-nnoremap <C-x><C-c> :wqa<CR>
-nnoremap <C-x><C-x><C-c> :qa!<CR>
-nnoremap <C-x>f :e<Space><C-r>=expand('%:h').'/'<CR><C-d>
-nnoremap <C-c>l :e $MYVIMRC<CR>
-nnoremap <C-x><C-k> :ls<CR>:bd<Space>
-nnoremap <C-x>k :ls<CR>:bd!<Space>
-"commandline bindings
-cnoremap <C-a> <Home>
-cnoremap <C-b> <End>
-cnoremap <C-M-f> <S-Right>
-cnoremap <C-M-b> <S-Left>
-"}}}
-"{{{ Vim Unimpaired
-"Insert space above and below
-function! s:BlankUp(count) abort
-  put!=repeat(nr2char(10), a:count)
-  ']+1
-  silent! call repeat#set("\<Plug>unimpairedBlankUp", a:count)
-endfunction
-function! s:BlankDown(count) abort
-  put =repeat(nr2char(10), a:count)
-  '[-1
-  silent! call repeat#set("\<Plug>unimpairedBlankDown", a:count)
-endfunction
-nnoremap <silent> [<Space> :<C-U>call <SID>BlankUp(v:count1)<CR>
-nnoremap <silent> ]<Space> :<C-U>call <SID>BlankDown(v:count1)<CR>
-
-"Settings
-nnoremap [ol :setlocal list<CR>
-nnoremap ]ol :setlocal nolist<CR>
-nnoremap [oh :setlocal hlsearch<CR>
-nnoremap ]oh :setlocal nohlsearch<CR>
-inoremap <C-x><C-h> <C-o>:setlocal hlsearch!<bar>set hlsearch?<CR>
-nnoremap [os :setlocal spell<CR>
-nnoremap ]os :setlocal nospell<CR>
-nnoremap [od :diffthis<CR>
-nnoremap ]od :diffoff<CR>
-nnoremap [wd :let g:prevwin=win_getid()<CR>
-      \:let b:wsv=winsaveview()<CR>
-      \:windo diffthis<CR>
-      \:silent! call win_gotoid(g:prevwin)<CR>
-      \:silent! call winrestview(b:wsv)<CR>
-nnoremap ]wd :let b:wsv=winsaveview()<CR>
-      \:diffoff!<CR>
-      \:silent! call winrestview(b:wsv)<CR>
-nnoremap [on :setlocal number<CR>
-nnoremap ]on :setlocal nonumber<CR>
-nnoremap [oc :setlocal cursorline<CR>
-nnoremap ]oc :setlocal nocursorline<CR>
-nnoremap [ov :setlocal virtualedit=all<CR>
-nnoremap ]ov :setlocal virtualedit=<CR>
-nnoremap [b :bprev<CR>
-nnoremap ]b :bnext<CR>
-nnoremap [l :lprevious<CR>
-nnoremap ]l :lnext<CR>
-nnoremap [q :cprevious<CR>
-nnoremap ]q :cnext<CR>
-"}}}
-"{{{ Vim Tips
-" To apply macros to multiple lines, highlight the lines and :norm!@@
-" v/foo/e will jump the visual selection to the next instance of foo (without incsearch)
-"   v/foo if you have incsearch. You can <C-g> & <C-t> to jump to the next/previous instance of foo
-" <C-g> in normal mode will show the full path for the current file
-" g<C-g> in a visual selection will print line/char/byte count of selection
-" ga or g8 will show ascii/utf8 code of current character
-" <C-f> in commandline mode will open a new editable window in normal mode
-"   this also allows you to view your past search/command history
-" Yank to a Capital letter register (eg A instead of a) to append to it, rather than overwriting it
-" <C-w>[number]| resizes a window's columns to that number, use '-' for height
-" <C-w><C-x> swaps the position of the current and alternate window
-" <C-o>[number]i[character] will insert [character] [number] amount of times in the same line while in insert mode. Skip <C-o> if you start in normal mode
-" :set bl to set buflisted an unlisted buffer (such as help files)
-" :scriptnames to see loaded script order
-" :map to see your loaded keymappings
-" :command to see loaded commands
-" :registers to see your registers
-" :oldfiles to see your previously opened files
-" using an empty pattern with :s e.g. :s//<whatever>/g will use the last search result with / as your pattern instead
-" yl to copy current character under cursor (instead of vy)
-" <C-d> in commandline mode to reveal all available options (like with wildmenu)
-" RSs,HML,Z<as prefix>,Q,U,+-_,<Space><BS><CR> are all (uncommonly) used keys (or keys with commonly used equivalents) safe for rebinding
-" <C-g> & <C-t> will jump to next/previous term while searching without having to press Enter
-" echo winwidth(0) to get the current window width (same for height)
-" :cq to exit vim with abnormal exit status, useful to abort git commit messages
-" <C-x><C-l> in insert mode to autocomplete entire lines present in the buffer
-" :%s/^/\=printf('%03d', line('.')) create a padded column of incrementing numbers
-" You can pipe the regex matches from :global into :substitute!
-" vim --startuptime vim.log to profile your vim startup
-" \_. is the turbo version of . which matches newline characters, allowing for regex matching over multiple lines
-" :redir @<register> to start recording Ex command outputs to <register>, :redir END to stop
-" To specify a case sensitive search pattern, append '\C'. (conversely, '\c' for a case insensitivite pattern)
-"}}}
-"{{{ iabbreviations nonrecursive
-"The double backslash is needed so vim doesn't complain
-inoreabbr \lambda\ λ<C-r>=Eatchar('\m\s\<Bar>/')<CR>
-inoreabbr \time\ <C-r>=strftime("%d-%b-%Y @ %H:%M")<CR><C-r>=Eatchar('\m\s\<Bar>/')<CR>
-inoreabbr \date\ <C-r>=strftime("%d-%b-%Y")<CR><C-r>=Eatchar('\m\s\<Bar>/')<CR>
-"}}}
-"{{{ Views
-set viewoptions=folds "let vop save only folds, and nothing else
-fun! Makeview(...) abort
-  let b:force_makeview = a:0 >= 1 ? a:1 : 0
-  let b:viewfolder = expand('%:p:h') . "/.v__views"
-  let b:viewfile = b:viewfolder . "/v__" . expand('%:t:r') . expand('%:e')
-  if filereadable(b:viewfile) || b:force_makeview==1
-    if b:force_makeview==1 "I suspect this is a bug that the cursor keeps gg-ing
-      execute "execute mkdir('" . b:viewfolder . "', 'p')"
+  endfun
+  inoremap <C-l> <Esc>:call DuplicateLineSavePosition()<CR>a<C-g>u
+  command! Gitmergesearch let @/="^<<<<<<< .*$\\|^>>>>>>> .*$\\|^=======$"
+  fun! Checkt(...) abort
+    let checkt_all = a:0 >= 1 ? a:1 : 0
+    if checkt_all==1
+      let currbufnr = bufnr("%")
+      silent! bufdo checktime
+      execute "buffer" . currbufnr
+    else
+      silent! checktime
     endif
-    let w:v = winsaveview()
-    execute "mkview! ".b:viewfile
-    execute "keepalt vsplit ".b:viewfile."| 3d _| w| bd"
-    if b:force_makeview==1
-      echo "saved view in ".b:viewfile
+    echo "+++ Buffer Refreshed +++"
+  endfun
+  command! EE call Checkt()
+  command! EA call Checkt(1)
+  xmap <S-Tab> %
+  inoremap <C-g><C-d> <C-d>| "C-t indents, C-g C-d de-indents in insert mode
+  "}}}
+  "{{{ Wildmenu Macros
+  nnoremap <M-e> :e<Space><C-d>
+  cnoremap <M-e> <Home><S-Right><C-w>e<End><C-d>
+  nnoremap <M-c>d :cd<Space><C-d>
+  cnoremap <M-c>d <Home><S-Right><C-w>cd<End><C-d>
+  cnoremap %% <Home><S-Right><S-Right><C-\>estrpart(getcmdline(),0,getcmdpos()-1)<CR>
+        \<C-r>=expand('%:h').'/'<CR><C-d>
+  cnoremap <M-h> <Home><S-Right><Right><C-\>estrpart(getcmdline(),0,getcmdpos()-1)<CR>
+        \~/<C-d>
+  cnoremap <M-d>k <Home><S-Right><Right><C-\>estrpart(getcmdline(),0,getcmdpos()-1)<CR>
+        \~/Desktop/<C-d>
+  cnoremap <M-v>im <Home><S-Right><Right><C-\>estrpart(getcmdline(),0,getcmdpos()-1)<CR>
+        \~/.vim/<C-d>
+  cnoremap <M-d>oc <Home><S-Right><Right><C-\>estrpart(getcmdline(),0,getcmdpos()-1)<CR>
+        \~/Documents/<C-d>
+  cnoremap <M-d>bo <Home><S-Right><Right><C-\>estrpart(getcmdline(),0,getcmdpos()-1)<CR>
+        \~/Dropbox/<C-d>
+  cnoremap <M-d>dc <Home><S-Right><Right><C-\>estrpart(getcmdline(),0,getcmdpos()-1)<CR>
+        \~/Dropbox/Documents/<C-d>
+  cnoremap <M-d>w <Home><S-Right><Right><C-\>estrpart(getcmdline(),0,getcmdpos()-1)<CR>
+        \~/Downloads/<C-d>
+  nnoremap <Leader>nv :e<Space>~/.config/nvim/init.vim<CR>
+  nnoremap <Leader>iv :e<Space>~/.vim/vimrc<CR>
+  "}}}
+  "{{{ UTF8 Macros
+  inoremap <M-q><M-a> <C-v>u25c6<Space>| "? Db
+  inoremap <M-q><M-b> <C-v>u2022<Space>| "
+  inoremap <M-q>b <C-v>u2022<Space>| "
+  inoremap <M-q><M-c> <C-v>u25e6<Space>| "?
+  inoremap <M-q><M-d> <C-v>u25c7<Space>| "? Dw
+  inoremap <M-q><M-l> <C-v>u2502| "¦ vv
+  inoremap <M-q><M-=> <C-v>u2713| "? OK
+  inoremap <M-q><M--> <C-v>u2717| "? XX
+  " ? u25b8
+  " ? u25b9
+  " ¦ u25a0
+  " ? u25a1
+  ":h digraph-table for a list of utf8 digraphs you can insert in vim
+  "}}}
+  "{{{ Buffer Management
+  nnoremap <M-s> :bn<CR>
+  nnoremap <M-a> :bp<CR>
+  nnoremap <C-s> :bn<CR>
+  nnoremap <C-q> :bp<CR>
+  nnoremap gb :buffers<CR>:buffer<Space>
+  " nnoremap <Leader>xbd :bp<bar>bd#<CR>| "bd w/o closing window
+  if !empty(globpath(&rtp, 'plugin/vem_tabline.vim'))
+    if g:vem_tabline_show == 1
+      nmap <Leader><Down> <Plug>vem_move_buffer_right-
+      nmap <Leader><Up> <Plug>vem_move_buffer_left-
+      nmap <Leader><Right> <Plug>vem_next_buffer-
+      nmap <Leader><Left> <Plug>vem_prev_buffer-
+      nmap <S-Down> <Plug>vem_move_buffer_right-
+      nmap <S-Up> <Plug>vem_move_buffer_left-
+      nmap <C-s> <Plug>vem_next_buffer-
+      nmap <C-q> <Plug>vem_prev_buffer-
     endif
-    call winrestview(w:v)
   endif
-endfun
-fun! Loadview(...) abort
-  let b:force_loadview = a:0 >= 1 ? a:1 : 0
-  let b:viewfolder = expand('%:p:h') . "/.v__views"
-  let b:viewfile = b:viewfolder . "/v__" . expand('%:t:r') . expand('%:e')
-  if filereadable(b:viewfile)
-    execute "silent! source ".b:viewfile
-    if b:force_loadview==1
-      echo "viewfile loaded from: ".b:viewfile
+  "}}}
+  "{{{ Tab Management
+  nnoremap <Leader>tn :tabnew<CR>
+  nnoremap <Leader>tc :tabclose<CR>
+  nnoremap <Leader>te :tabedit<Space>%<CR><C-o>
+  "}}}
+  "{{{ Window Management
+  set splitright splitbelow " Prefer opening new splits to the right and below
+  nnoremap <expr> <C-w><C-q> &diff ? ":diffoff!<Bar>close<CR>" : "<C-w>c"
+  nnoremap <expr> <C-w><C-c> &diff ? ":diffoff!<Bar>close<CR>" : "<C-w>c"
+  nnoremap <expr> <C-w>c &diff ? ":diffoff!<Bar>close<CR>" : "<C-w>c"
+  nnoremap <expr> <C-w><C-o> &diff ? ":diffoff!<Bar>only<CR>" : "<C-w>o"
+  nnoremap <C-w><C-e> :enew<CR>
+  nnoremap <M-7> <C-w><
+  nnoremap <M-0> <C-w>>
+  nnoremap <M-8> <C-w>-
+  nnoremap <M-9> <C-w>+
+  nnoremap <M-(> 200<C-w>+
+  nnoremap <M-j> <C-w><C-j>
+  nnoremap <M-k> <C-w><C-k>
+  nnoremap <M-l> <C-w><C-l>
+  nnoremap <M-h> <C-w><C-h>
+  nnoremap <M-\> <C-w><C-p>
+  if !empty(globpath(&rtp, 'plugin/tmux_navigator.vim'))
+    nnoremap <silent> <M-h> :TmuxNavigateLeft<CR>
+    nnoremap <silent> <M-j> :TmuxNavigateDown<CR>
+    nnoremap <silent> <M-k> :TmuxNavigateUp<CR>
+    nnoremap <silent> <M-l> :TmuxNavigateRight<CR>
+    nnoremap <silent> <M-\> :TmuxNavigatePrevious<CR>
+    inoremap <silent> <M-h> <C-o>:TmuxNavigateLeft<CR>
+    inoremap <silent> <M-j> <C-o>:TmuxNavigateDown<CR>
+    inoremap <silent> <M-k> <C-o>:TmuxNavigateUp<CR>
+    inoremap <silent> <M-l> <C-o>:TmuxNavigateRight<CR>
+    inoremap <silent> <M-\> <C-o>:TmuxNavigatePrevious<CR>
+  endif
+  "}}}
+  "{{{ Emacs Emulation
+  nnoremap <C-c> <NOP>| "Disable default C-c behavior to use it for custom mappings
+  nnoremap <C-x> <NOP>| "Disable default C-x behavior to use it for custom mappings
+  cnoremap <expr> <C-g> getcmdtype() == "/" \|\| getcmdtype() == "?" ? "<C-g>" : "<C-c><Esc>"
+  nnoremap <expr> <C-g> bufname("") =~ "NERD_tree_\\d"  ? ":NERDTreeToggle<CR>" :
+        \ bufname("") == "[Command Line]" ? ":close<CR>" :
+        \ &filetype == "godoc" ? ":close<CR>" :
+        \ getwininfo(win_getid())[0]['quickfix'] ? ":cclose<CR>" :
+        \ getwininfo(win_getid())[0]['loclist'] ? ":lclose<CR>" : "<C-g>"
+  " see :h expression-syntax for why =~ over ==
+  "undo
+  inoremap <C-_> <C-o>u<C-o>u
+  inoremap <CR> <C-g>u<CR>
+  "movement
+  inoremap <C-b> <Left>
+  inoremap <expr> <C-n> pumvisible() ? "<Down>": "<C-o>gj"
+  inoremap <expr> <C-p> pumvisible() ? "<Up>": "<C-o>gk"
+  inoremap <expr> <C-M-n> pumvisible() ? "<Down><Down><Down>": "<C-o>5gj"
+  inoremap <expr> <C-M-p> pumvisible() ? "<Up><Up><Up>": "<C-o>5gk"
+  inoremap <C-f> <Right>
+  inoremap <M-f> <S-Right>
+  inoremap <M-b> <S-Left>
+  inoremap <C-a> <C-c>I
+  inoremap <C-e> <End>
+  "forward delete, backward delete & character delete
+  inoremap <M-d> <C-g>u<C-o>vec<C-g>u
+  inoremap <M-BS> <C-g>u<C-w><C-g>u
+  inoremap <C-BS> <C-g>u<C-w><C-g>u
+  inoremap <C-w> <C-g>u<C-w><C-g>u
+  inoremap <C-d> <Del>
+  "kill to EOL, kill to SOL, and kill entire line
+  inoremap <C-k> <C-o>D
+  inoremap <C-M-k> <C-k>| "C-M-k replaces C-k for entering digraphs
+  "save
+  inoremap <C-x><C-s> <C-o>:w<CR>
+  nnoremap <C-x><C-s> :w<CR>
+  "paste from vim register
+  inoremap <M-y> \<C-o>:set paste\<CR>\<C-r>"\<C-o>:set nopaste\<CR>
+  "emacs misc
+  nnoremap <C-x><C-c> :wqa<CR>
+  nnoremap <C-x><C-x><C-c> :qa!<CR>
+  nnoremap <C-x>f :e<Space><C-r>=expand('%:h').'/'<CR><C-d>
+  nnoremap <C-c>l :e $MYVIMRC<CR>
+  nnoremap <C-x><C-k> :ls<CR>:bd<Space>
+  nnoremap <C-x>k :ls<CR>:bd!<Space>
+  "commandline bindings
+  cnoremap <C-a> <Home>
+  cnoremap <C-b> <End>
+  cnoremap <C-M-f> <S-Right>
+  cnoremap <C-M-b> <S-Left>
+  "}}}
+  "{{{ Vim Unimpaired
+  "Insert space above and below
+  function! s:BlankUp(count) abort
+    put!=repeat(nr2char(10), a:count)
+    ']+1
+    silent! call repeat#set("\<Plug>unimpairedBlankUp", a:count)
+  endfunction
+  function! s:BlankDown(count) abort
+    put =repeat(nr2char(10), a:count)
+    '[-1
+    silent! call repeat#set("\<Plug>unimpairedBlankDown", a:count)
+  endfunction
+  nnoremap <silent> [<Space> :<C-U>call <SID>BlankUp(v:count1)<CR>
+  nnoremap <silent> ]<Space> :<C-U>call <SID>BlankDown(v:count1)<CR>
+
+  "Settings
+  nnoremap [ol :setlocal list<CR>
+  nnoremap ]ol :setlocal nolist<CR>
+  nnoremap [oh :setlocal hlsearch<CR>
+  nnoremap ]oh :setlocal nohlsearch<CR>
+  inoremap <C-x><C-h> <C-o>:setlocal hlsearch!<bar>set hlsearch?<CR>
+  nnoremap [os :setlocal spell<CR>
+  nnoremap ]os :setlocal nospell<CR>
+  nnoremap [od :diffthis<CR>
+  nnoremap ]od :diffoff<CR>
+  nnoremap [wd :let g:prevwin=win_getid()<CR>
+        \:let b:wsv=winsaveview()<CR>
+        \:windo diffthis<CR>
+        \:silent! call win_gotoid(g:prevwin)<CR>
+        \:silent! call winrestview(b:wsv)<CR>
+  nnoremap ]wd :let b:wsv=winsaveview()<CR>
+        \:diffoff!<CR>
+        \:silent! call winrestview(b:wsv)<CR>
+  nnoremap [on :setlocal number<CR>
+  nnoremap ]on :setlocal nonumber<CR>
+  nnoremap [oc :setlocal cursorline<CR>
+  nnoremap ]oc :setlocal nocursorline<CR>
+  nnoremap [ov :setlocal virtualedit=all<CR>
+  nnoremap ]ov :setlocal virtualedit=<CR>
+  nnoremap [b :bprev<CR>
+  nnoremap ]b :bnext<CR>
+  nnoremap [l :lprevious<CR>
+  nnoremap ]l :lnext<CR>
+  nnoremap [q :cprevious<CR>
+  nnoremap ]q :cnext<CR>
+  "}}}
+  "{{{ Vim Tips
+  " To apply macros to multiple lines, highlight the lines and :norm!@@
+  " v/foo/e will jump the visual selection to the next instance of foo (without incsearch)
+  "   v/foo if you have incsearch. You can <C-g> & <C-t> to jump to the next/previous instance of foo
+  " <C-g> in normal mode will show the full path for the current file
+  " g<C-g> in a visual selection will print line/char/byte count of selection
+  " ga or g8 will show ascii/utf8 code of current character
+  " <C-f> in commandline mode will open a new editable window in normal mode
+  "   this also allows you to view your past search/command history
+  " Yank to a Capital letter register (eg A instead of a) to append to it, rather than overwriting it
+  " <C-w>[number]| resizes a window's columns to that number, use '-' for height
+  " <C-w><C-x> swaps the position of the current and alternate window
+  " <C-o>[number]i[character] will insert [character] [number] amount of times in the same line while in insert mode. Skip <C-o> if you start in normal mode
+  " :set bl to set buflisted an unlisted buffer (such as help files)
+  " :scriptnames to see loaded script order
+  " :map to see your loaded keymappings
+  " :command to see loaded commands
+  " :registers to see your registers
+  " :oldfiles to see your previously opened files
+  " using an empty pattern with :s e.g. :s//<whatever>/g will use the last search result with / as your pattern instead
+  " yl to copy current character under cursor (instead of vy)
+  " <C-d> in commandline mode to reveal all available options (like with wildmenu)
+  " RSs,HML,Z<as prefix>,Q,U,+-_,<Space><BS><CR> are all (uncommonly) used keys (or keys with commonly used equivalents) safe for rebinding
+  " <C-g> & <C-t> will jump to next/previous term while searching without having to press Enter
+  " echo winwidth(0) to get the current window width (same for height)
+  " :cq to exit vim with abnormal exit status, useful to abort git commit messages
+  " <C-x><C-l> in insert mode to autocomplete entire lines present in the buffer
+  " :%s/^/\=printf('%03d', line('.')) create a padded column of incrementing numbers
+  " You can pipe the regex matches from :global into :substitute!
+  " vim --startuptime vim.log to profile your vim startup
+  " \_. is the turbo version of . which matches newline characters, allowing for regex matching over multiple lines
+  " :redir @<register> to start recording Ex command outputs to <register>, :redir END to stop
+  " To specify a case sensitive search pattern, append '\C'. (conversely, '\c' for a case insensitivite pattern)
+  "}}}
+  "{{{ iabbreviations nonrecursive
+  "The double backslash is needed so vim doesn't complain
+  inoreabbr \lambda\ ?<C-r>=Eatchar('\m\s\<Bar>/')<CR>
+  inoreabbr \time\ <C-r>=strftime("%d-%b-%Y @ %H:%M")<CR><C-r>=Eatchar('\m\s\<Bar>/')<CR>
+  inoreabbr \date\ <C-r>=strftime("%d-%b-%Y")<CR><C-r>=Eatchar('\m\s\<Bar>/')<CR>
+  "}}}
+  "{{{ Views
+  set viewoptions=folds "let vop save only folds, and nothing else
+  fun! Makeview(...) abort
+    let b:force_makeview = a:0 >= 1 ? a:1 : 0
+    let b:viewfolder = expand('%:p:h') . "/.v__views"
+    let b:viewfile = b:viewfolder . "/v__" . expand('%:t:r') . expand('%:e')
+    if filereadable(b:viewfile) || b:force_makeview==1
+      if b:force_makeview==1 "I suspect this is a bug that the cursor keeps gg-ing
+        execute "execute mkdir('" . b:viewfolder . "', 'p')"
+      endif
+      let w:v = winsaveview()
+      execute "mkview! ".b:viewfile
+      execute "keepalt vsplit ".b:viewfile."| 3d _| w| bd"
+      if b:force_makeview==1
+        echo "saved view in ".b:viewfile
+      endif
+      call winrestview(w:v)
     endif
-  else
-    " this else conditional is for debugging purposes
-    echo "viewfile not found in: ".b:viewfile
-  endif
-endfun
-command! Mkview call Makeview(1)
-command! MKV call Makeview(1)
-command! LDV call Loadview(1)
-augroup AutosaveView
-  autocmd!
-  au BufWrite,VimLeave * silent! call Makeview()
-  " au BufWinLeave,VimLeave * silent! call Makeview()
-  "    ^^^using bufwinleave triggers some buffer deleted unexpectedly by autocmd error
-  au BufRead * silent! call Loadview()
-augroup END
-"}}}
+  endfun
+  fun! Loadview(...) abort
+    let b:force_loadview = a:0 >= 1 ? a:1 : 0
+    let b:viewfolder = expand('%:p:h') . "/.v__views"
+    let b:viewfile = b:viewfolder . "/v__" . expand('%:t:r') . expand('%:e')
+    if filereadable(b:viewfile)
+      execute "silent! source ".b:viewfile
+      if b:force_loadview==1
+        echo "viewfile loaded from: ".b:viewfile
+      endif
+    else
+      " this else conditional is for debugging purposes
+      echo "viewfile not found in: ".b:viewfile
+    endif
+  endfun
+  command! Mkview call Makeview(1)
+  command! MKV call Makeview(1)
+  command! LDV call Loadview(1)
+  augroup AutosaveView
+    autocmd!
+    au BufWrite,VimLeave * silent! call Makeview()
+    " au BufWinLeave,VimLeave * silent! call Makeview()
+    "    ^^^using bufwinleave triggers some buffer deleted unexpectedly by autocmd error
+    au BufRead * silent! call Loadview()
+  augroup END
+  "}}}
 
-" Set swap & undo file directory
-" if isdirectory(expand("~/.vim/.swp"))
-"   set directory^=~/.vim/.swp//
-" endif
-set noswapfile
-if !&swapfile && !empty(globpath(&rtp, 'plugin/AutoSave.vim'))
-  set updatetime=1000
-endif
-" if isdirectory(expand("~/.vim/.undo"))
-"   set undofile
-"   set undodir^=~/.vim/.undo//
-"   set undolevels=100000 " Maximum number of undos
-"   set undoreload=100000 " Save complete files for undo on reload if it has fewer lines
-" endif
+  " Set swap & undo file directory
+  " if isdirectory(expand("~/.vim/.swp"))
+  "   set directory^=~/.vim/.swp//
+  " endif
+  set noswapfile
+  if !&swapfile && !empty(globpath(&rtp, 'plugin/AutoSave.vim'))
+    set updatetime=1000
+  endif
+  " if isdirectory(expand("~/.vim/.undo"))
+  "   set undofile
+  "   set undodir^=~/.vim/.undo//
+  "   set undolevels=100000 " Maximum number of undos
+  "   set undoreload=100000 " Save complete files for undo on reload if it has fewer lines
+  " endif
 
-"{{{ MyHighlights
-function! MyHighlights() abort
-  hi Visual ctermbg=10 ctermfg=0
-  hi DiffAdd cterm=none ctermfg=232 gui=none guifg=black
-  hi DiffChange cterm=none ctermfg=232 gui=none guifg=black
-  hi DiffDelete cterm=none ctermfg=232 gui=none guifg=black
-  hi DiffText cterm=none ctermfg=232 gui=none guifg=black
-  hi TabLineFill cterm=bold ctermbg=none gui=none guibg=bg
-  hi TabLineSel cterm=bold,underline ctermbg=16 ctermfg=7 guibg=bg guifg=black gui=bold,underline
-  hi TabLine cterm=none ctermbg=none ctermfg=246 guibg=bg guifg=#8787af gui=none
-  hi VemTablineShown cterm=none ctermbg=16 ctermfg=7 guibg=bg guifg=black
-  hi Folded cterm=none ctermbg=none gui=none guibg=bg
-  hi Search ctermfg=232 ctermbg=10 guifg=black guibg=Cyan1
-  hi IncSearch cterm=none ctermfg=232 ctermbg=9
-  hi VertSplit cterm=none ctermfg=103 ctermbg=none gui=none guifg=#000000 guibg=#e4e4e4
-  hi EndOfBuffer ctermfg=16 guifg=bg
-  hi MatchParen cterm=underline ctermbg=none gui=underline guibg=bg
-  hi CursorLine cterm=none ctermbg=17
-  hi Cursor gui=reverse guibg=bg
-  hi StatusLine   ctermfg=233  ctermbg=103 cterm=bold gui=bold guibg=#bcbcbc
-  hi StatusLineNC ctermfg=103 ctermbg=none cterm=none,underline guibg=bg gui=underline
-  hi SpellBad ctermbg=234 ctermfg=15 cterm=bold,underline
-  hi SpellCap ctermbg=234 ctermfg=14 cterm=underline
-  hi ALEErrorLine cterm=bold,underline
-  hi SignColumn ctermbg=none
-  hi ColorColumn ctermbg=234 guibg=grey85
-  hi SpecialKey term=bold ctermfg=237 guifg=Grey70
-  hi Whitespace term=bold ctermfg=237 guifg=Grey70
-endfunction
-fun! RestoreCursorPosition() abort
-  if &ft =~ 'gitcommit\|gitcommit'
-    return
+  "{{{ MyHighlights
+  function! MyHighlights() abort
+    hi Visual ctermbg=10 ctermfg=0
+    hi DiffAdd cterm=none ctermfg=232 gui=none guifg=black
+    hi DiffChange cterm=none ctermfg=232 gui=none guifg=black
+    hi DiffDelete cterm=none ctermfg=232 gui=none guifg=black
+    hi DiffText cterm=none ctermfg=232 gui=none guifg=black
+    hi TabLineFill cterm=bold ctermbg=none gui=none guibg=bg
+    hi TabLineSel cterm=bold,underline ctermbg=16 ctermfg=7 guibg=bg guifg=black gui=bold,underline
+    hi TabLine cterm=none ctermbg=none ctermfg=246 guibg=bg guifg=#8787af gui=none
+    hi VemTablineShown cterm=none ctermbg=16 ctermfg=7 guibg=bg guifg=black
+    hi Folded cterm=none ctermbg=none gui=none guibg=bg
+    hi Search ctermfg=232 ctermbg=10 guifg=black guibg=Cyan1
+    hi IncSearch cterm=none ctermfg=232 ctermbg=9
+    hi VertSplit cterm=none ctermfg=103 ctermbg=none gui=none guifg=#000000 guibg=#e4e4e4
+    hi EndOfBuffer ctermfg=16 guifg=bg
+    hi MatchParen cterm=underline ctermbg=none gui=underline guibg=bg
+    hi CursorLine cterm=none ctermbg=17
+    hi Cursor gui=reverse guibg=bg
+    hi StatusLine   ctermfg=233  ctermbg=103 cterm=bold gui=bold guibg=#bcbcbc
+    hi StatusLineNC ctermfg=103 ctermbg=none cterm=none,underline guibg=bg gui=underline
+    hi SpellBad ctermbg=234 ctermfg=15 cterm=bold,underline
+    hi SpellCap ctermbg=234 ctermfg=14 cterm=underline
+    hi ALEErrorLine cterm=bold,underline
+    hi SignColumn ctermbg=none
+    hi ColorColumn ctermbg=234 guibg=grey85
+    hi SpecialKey term=bold ctermfg=237 guifg=Grey70
+    hi Whitespace term=bold ctermfg=237 guifg=Grey70
+  endfunction
+  fun! RestoreCursorPosition() abort
+    if &ft =~ 'gitcommit\|gitcommit'
+      return
+    endif
+    call setpos(".", getpos("'\""))
+  endfun
+  augroup Autocommands
+    autocmd!
+    autocmd ColorScheme * call MyHighlights()
+    autocmd BufReadPost * call RestoreCursorPosition()
+    " autocmd CmdlineEnter * setlocal cursorline
+    " autocmd CmdlineLeave * setlocal nocursorline
+    " autocmd CmdlineLeave * if bufname("") =~ "NERD_tree_\\d" | setlocal cursorline | endif
+    " autocmd CmdlineLeave * if bufname("") != "NERD_tree_\\d" | setlocal nocursorline | endif
+    " autocmd BufEnter NERD_tree_* setlocal cursorline
+    " autocmd BufLeave NERD_tree_* setlocal nocursorline
+    autocmd BufNewFile,BufRead *.fish setlocal filetype=fish
+    autocmd BufEnter,BufLeave * if &buftype ==# 'terminal' | let g:t_bufnum = expand('<abuf>') | endif
+    autocmd CompleteDone * pclose
+  augroup END
+  "}}}
+  "{{{ GUI Vim Settings
+  if has('gui_running')
+    colorscheme morning
+    set laststatus=1
+    set guioptions=
+    set belloff=all
+    if has('macunix')
+      set linespace=1
+      " set guifont=Source\ Code\ Pro:h12
+      set guifont=Go\ Mono:h12
+    elseif has('unix')
+      set guifont=DejaVu\ Sans\ Mono\ Book
+      set lines=40 columns=150
+    elseif has('win32')
+      set guifont=Consolas:h10
+      set linespace=0
+      set lines=45 columns=160
+    endif
   endif
-  call setpos(".", getpos("'\""))
-endfun
-augroup Autocommands
-  autocmd!
-  autocmd ColorScheme * call MyHighlights()
-  autocmd BufReadPost * call RestoreCursorPosition()
-  " autocmd CmdlineEnter * setlocal cursorline
-  " autocmd CmdlineLeave * setlocal nocursorline
-  " autocmd CmdlineLeave * if bufname("") =~ "NERD_tree_\\d" | setlocal cursorline | endif
-  " autocmd CmdlineLeave * if bufname("") != "NERD_tree_\\d" | setlocal nocursorline | endif
-  " autocmd BufEnter NERD_tree_* setlocal cursorline
-  " autocmd BufLeave NERD_tree_* setlocal nocursorline
-  autocmd BufNewFile,BufRead *.fish setlocal filetype=fish
-  autocmd BufEnter,BufLeave * if &buftype ==# 'terminal' | let g:t_bufnum = expand('<abuf>') | endif
-  autocmd CompleteDone * pclose
-augroup END
-"}}}
-"{{{ GUI Vim Settings
-if has('gui_running')
-  colorscheme morning
-  set laststatus=1
-  set guioptions=
-  set belloff=all
-  if has('macunix')
-    set linespace=1
-    " set guifont=Source\ Code\ Pro:h12
-    set guifont=Go\ Mono:h12
-  elseif has('unix')
-    set guifont=DejaVu\ Sans\ Mono\ Book
-    set lines=40 columns=150
-  elseif has('win32')
-    set guifont=Consolas:h10
-    set linespace=0
-    set lines=45 columns=160
+  "}}}
+  "{{{ Terminal Vim Settings
+  if !has("gui_running")
+    colorscheme default
+    set background=light
+    if has('nvim')
+      set guicursor=n-v-c:block,i-ci-ve:ver25,r-cr:hor20,o:hor50
+            \,a:blinkwait700-blinkoff400-blinkon250-Cursor/lCursor
+            \,sm:block-blinkwait175-blinkoff150-blinkon175
+      silent! lang en_US.UTF-8
+    else
+      set ttimeoutlen=10
+    endif
   endif
-endif
-"}}}
-"{{{ Terminal Vim Settings
-if !has("gui_running")
-  colorscheme default
-  set background=light
-  if has('nvim')
-    set guicursor=n-v-c:block,i-ci-ve:ver25,r-cr:hor20,o:hor50
-          \,a:blinkwait700-blinkoff400-blinkon250-Cursor/lCursor
-          \,sm:block-blinkwait175-blinkoff150-blinkon175
-    silent! lang en_US.UTF-8
-  else
-    set ttimeoutlen=10
+  "}}}
+  "{{{ WSL Clipboard Support
+  func! GetSelectedText()
+    normal gv"xy
+    let result = getreg("x")
+    return result
+  endfunc
+  if !has("gui_running") && executable("clip.exe")
+    xnoremap Y :call system('clip.exe', GetSelectedText())<CR>
+    nnoremap YY "xyy:call system('clip.exe', GetSelectedText())<CR>
+    nnoremap Y& m`^"xyg$``:call system('clip.exe', GetSelectedText())<CR>
   endif
-endif
-"}}}
-"{{{ WSL Clipboard Support
-func! GetSelectedText()
-  normal gv"xy
-  let result = getreg("x")
-  return result
-endfunc
-if !has("gui_running") && executable("clip.exe")
-  xnoremap Y :call system('clip.exe', GetSelectedText())<CR>
-  nnoremap YY "xyy:call system('clip.exe', GetSelectedText())<CR>
-  nnoremap Y& m`^"xyg$``:call system('clip.exe', GetSelectedText())<CR>
-endif
-"}}}
-"{{{ Statusline Settings statsett
-set statusline=
-set statusline+=%{has('nvim')?'[':'('}                 " [(
-set statusline+=%{strlen(&ft)?&ft:'none'},             " Filetype
-set statusline+=%{strlen(&fenc)?&fenc:&enc},           " Encoding
-set statusline+=%{&fileformat}                         " File format (dos, unix)
-set statusline+=%{has('nvim')?']':')'}                 " ])
-set statusline+=\ %f                                   " t filename, f relative filepath, F absolute filepath
-set statusline+=%{&modified?'\ +':''}                  " Show '+' when file has been modified
-set statusline+=%{&readonly?'\ [RO]':''}               " Show 'RO' when file is in readonly
-set statusline+=%{!&modifiable?'\ [noma]':''}          " Show 'noma' when file is nonmodifiable
-set statusline+=%=                                     " Right align
-set statusline+=\ %{exists('g:loaded_obsession')?ObsessionStatus():''} " Obsession status
-set statusline+=\ %{exists('g:loaded_fugitive')?fugitive#head(7):''}    " Git branch
-set statusline+=\ %(%l,%c%V%)                          " Show line, column, virtual column (denoted with a '-' in front)
-set statusline+=\ %3p%%\                               " Percentage of file shown
-set statusline+=%{has('nvim')?'[':'('}                 " [(
-set statusline+=%(%{'help'!=&filetype?bufnr('%'):''}%) " Buffer number
-set statusline+=%{has('nvim')?']':')'}                 " ])
-"}}}
+  "}}}
+  "{{{ Statusline Settings statsett
+  set statusline=
+  set statusline+=%{has('nvim')?'[':'('}                 " [(
+  set statusline+=%{strlen(&ft)?&ft:'none'},             " Filetype
+  set statusline+=%{strlen(&fenc)?&fenc:&enc},           " Encoding
+  set statusline+=%{&fileformat}                         " File format (dos, unix)
+  set statusline+=%{has('nvim')?']':')'}                 " ])
+  set statusline+=\ %f                                   " t filename, f relative filepath, F absolute filepath
+  set statusline+=%{&modified?'\ +':''}                  " Show '+' when file has been modified
+  set statusline+=%{&readonly?'\ [RO]':''}               " Show 'RO' when file is in readonly
+  set statusline+=%{!&modifiable?'\ [noma]':''}          " Show 'noma' when file is nonmodifiable
+  set statusline+=%=                                     " Right align
+  set statusline+=\ %{exists('g:loaded_obsession')?ObsessionStatus():''} " Obsession status
+  set statusline+=\ %{exists('g:loaded_fugitive')?fugitive#head(7):''}    " Git branch
+  set statusline+=\ %(%l,%c%V%)                          " Show line, column, virtual column (denoted with a '-' in front)
+  set statusline+=\ %3p%%\                               " Percentage of file shown
+  set statusline+=%{has('nvim')?'[':'('}                 " [(
+  set statusline+=%(%{'help'!=&filetype?bufnr('%'):''}%) " Buffer number
+  set statusline+=%{has('nvim')?']':')'}                 " ])
+  "}}}
 
-"{{{ Vim Functions
-"{{{ Nr2Bin
-" The function Nr2Bin() returns the binary string representation of a number
-func! Nr2Bin(nr)
-  let n = a:nr
-  let r = ""
-  while n
-    let r = '01'[n % 2] . r
-    let n = n / 2
-  endwhile
-  return r
-endfunc
-"}}}
-"{{{ /search suggestions
-" function! s:search_mode_start()
-"     cnoremap <buffer> <Tab> <C-f>a<C-n>
-"     let s:old_complete_opt = &completeopt
-"     set completeopt-=noinsert
-" endfunction
-" function! s:search_mode_stop()
-"     let &completeopt = s:old_complete_opt
-" endfunction
-" augroup SearchSuggestions
-"   autocmd!
-"   silent! cunmap <Tab>
-"   autocmd CmdlineEnter /,\? call <SID>search_mode_start()
-"   autocmd CmdlineLeave /,\? call <SID>search_mode_stop()
-" augroup END
-"}}}
-"{{{ TrimEndLines
-function! TrimEndLines()
+  "{{{ Vim Functions
+  "{{{ Nr2Bin
+  " The function Nr2Bin() returns the binary string representation of a number
+  func! Nr2Bin(nr)
+    let n = a:nr
+    let r = ""
+    while n
+      let r = '01'[n % 2] . r
+      let n = n / 2
+    endwhile
+    return r
+  endfunc
+  "}}}
+  "{{{ /search suggestions
+  " function! s:search_mode_start()
+  "     cnoremap <buffer> <Tab> <C-f>a<C-n>
+  "     let s:old_complete_opt = &completeopt
+  "     set completeopt-=noinsert
+  " endfunction
+  " function! s:search_mode_stop()
+  "     let &completeopt = s:old_complete_opt
+  " endfunction
+  " augroup SearchSuggestions
+  "   autocmd!
+  "   silent! cunmap <Tab>
+  "   autocmd CmdlineEnter /,\? call <SID>search_mode_start()
+  "   autocmd CmdlineLeave /,\? call <SID>search_mode_stop()
+  " augroup END
+  "}}}
+  "{{{ TrimEndLines
+  function! TrimEndLines()
     let save_cursor = getpos(".")
     :silent! %s#\($\n\s*\)\+\%$##
     call setpos('.', save_cursor)
-endfunction
-command! TrimEndLines call TrimEndLines()
-"}}}
-"{{{ Consume iabbr trailing space
-"https://stackoverflow.com/questions/11858927/preventing-trailing-whitespace-when-using-vim-abbreviations
-function! Eatchar(pat)
-  let c = nr2char(getchar(0))
-  return (c =~ a:pat) ? '' : c
-endfunction
-"}}}
-"{{{ Redir
-" https://gist.github.com/romainl/eae0a260ab9c135390c30cd370c20cd7
-function! Redir(cmd)
-  for win in range(1, winnr('$'))
-    if getwinvar(win, 'scratch')
-      execute win . 'windo close'
+  endfunction
+  command! TrimEndLines call TrimEndLines()
+  "}}}
+  "{{{ Consume iabbr trailing space
+  "https://stackoverflow.com/questions/11858927/preventing-trailing-whitespace-when-using-vim-abbreviations
+  function! Eatchar(pat)
+    let c = nr2char(getchar(0))
+    return (c =~ a:pat) ? '' : c
+  endfunction
+  "}}}
+  "{{{ Redir
+  " https://gist.github.com/romainl/eae0a260ab9c135390c30cd370c20cd7
+  function! Redir(cmd)
+    for win in range(1, winnr('$'))
+      if getwinvar(win, 'scratch')
+        execute win . 'windo close'
+      endif
+    endfor
+    if a:cmd =~ '^!'
+      let output = system(matchstr(a:cmd, '^!\zs.*'))
+    else
+      redir => output
+      execute a:cmd
+      redir END
     endif
-  endfor
-  if a:cmd =~ '^!'
-    let output = system(matchstr(a:cmd, '^!\zs.*'))
-  else
-    redir => output
-    execute a:cmd
-    redir END
-  endif
-  vnew
-  let w:scratch = 1
-  setlocal buftype=nofile bufhidden=wipe nobuflisted noswapfile nonumber
-  call setline(1, split(output, "\n"))
-endfunction
-command! -nargs=1 -complete=command Redir silent call Redir(<q-args>)
-" Usage:
-" 	:Redir hi ............. show the full output of command ':hi' in a scratch window
-" 	:Redir !ls -al ........ show the full output of command ':!ls -al' in a scratch window
-"}}}
-"}}}
+    vnew
+    let w:scratch = 1
+    setlocal buftype=nofile bufhidden=wipe nobuflisted noswapfile nonumber
+    call setline(1, split(output, "\n"))
+  endfunction
+  command! -nargs=1 -complete=command Redir silent call Redir(<q-args>)
+  " Usage:
+  " 	:Redir hi ............. show the full output of command ':hi' in a scratch window
+  " 	:Redir !ls -al ........ show the full output of command ':!ls -al' in a scratch window
+  "}}}
+  "}}}
 
-"{{{ Vim8 :terminal Settings
-if !has('nvim')
-  augroup Vim8Terminal
-    autocmd!
-    autocmd BufWinEnter,BufEnter,WinEnter * if &buftype ==# "terminal" |startinsert| endif
-  augroup END
-  silent! tnoremap <c-w><c-[> <c-\><c-n>
-  silent! nnoremap <expr> <c-w><c-i> &buftype ==# 'terminal' ? "i" : ""
-  silent! nnoremap <expr> <c-w><c-a> &buftype ==# 'terminal' ? "a" : ""
-  silent! tnoremap <c-x><c-b> <c-\><c-n>:ls<cr>:b<space>
-  silent! tnoremap <c-q> <c-\><c-n>:bp<cr>
-  silent! tnoremap <c-s> <c-\><c-n>:bn<cr>
-  silent! cabbrev termm term ++curwin
-endif
-"}}}
+  "{{{ Vim8 :terminal Settings
+  if !has('nvim')
+    augroup Vim8Terminal
+      autocmd!
+      autocmd BufWinEnter,BufEnter,WinEnter * if &buftype ==# "terminal" |startinsert| endif
+    augroup END
+    silent! tnoremap <c-w><c-[> <c-\><c-n>
+    silent! nnoremap <expr> <c-w><c-i> &buftype ==# 'terminal' ? "i" : ""
+    silent! nnoremap <expr> <c-w><c-a> &buftype ==# 'terminal' ? "a" : ""
+    silent! tnoremap <c-x><c-b> <c-\><c-n>:ls<cr>:b<space>
+    silent! tnoremap <c-q> <c-\><c-n>:bp<cr>
+    silent! tnoremap <c-s> <c-\><c-n>:bn<cr>
+    silent! cabbrev termm term ++curwin
+  endif
+  "}}}
