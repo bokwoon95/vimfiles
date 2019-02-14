@@ -650,6 +650,7 @@ elseif !has('nvim')
   let g:slime_target = "vimterminal"
 endif
 let g:slime_no_mappings=1
+cabbrev slimc let @s=split($TMUX, ",")[0] \| SlimeConfig
 xmap <C-c><C-e> <Plug>SlimeRegionSend
 nmap <C-c><C-e> <Plug>SlimeParagraphSend
 nmap <C-c><C-s> <Plug>SlimeLineSend
@@ -1175,37 +1176,46 @@ endif
 
 "{{{ MyHighlights
 function! MyHighlights() abort
-  hi Visual ctermbg=10 ctermfg=0
-  hi DiffAdd cterm=none ctermfg=232 gui=none guifg=black
-  hi DiffChange cterm=none ctermfg=232 gui=none guifg=black
-  hi DiffDelete cterm=none ctermfg=232 gui=none guifg=black
-  hi DiffText cterm=none ctermfg=232 gui=none guifg=black
-  hi TabLineFill cterm=bold ctermbg=none gui=none guibg=bg
-  hi TabLineSel cterm=bold,underline ctermbg=16 ctermfg=7 guibg=bg guifg=black gui=bold,underline
-  hi TabLine cterm=none ctermbg=none ctermfg=246 guibg=bg guifg=#8787af gui=none
-  hi VemTablineShown cterm=none ctermbg=16 ctermfg=7 guibg=bg guifg=black
-  hi Folded cterm=none ctermbg=none gui=none guibg=bg
-  hi Search ctermfg=232 ctermbg=10 guifg=black guibg=Cyan1
-  hi IncSearch cterm=none ctermfg=232 ctermbg=9
-  hi VertSplit cterm=none ctermfg=103 ctermbg=none gui=none guifg=#000000 guibg=#e4e4e4
-  hi EndOfBuffer ctermfg=16 guifg=bg
-  hi MatchParen cterm=underline ctermbg=none gui=underline guibg=bg
-  hi CursorLine cterm=none ctermbg=17
-  hi Cursor gui=reverse guibg=bg
-  hi StatusLine   ctermfg=233  ctermbg=103 cterm=bold gui=bold guibg=#bcbcbc
-  hi StatusLineNC ctermfg=103 ctermbg=none cterm=none,underline guibg=bg gui=underline
-  hi SpellBad ctermbg=234 ctermfg=15 cterm=bold,underline
-  hi SpellCap ctermbg=234 ctermfg=14 cterm=underline
-  hi ALEErrorLine cterm=bold,underline
-  hi SignColumn ctermbg=none
-  hi ColorColumn ctermbg=234 guibg=grey85
-  hi SpecialKey term=bold ctermfg=237 guifg=Grey70
-  hi Whitespace term=bold ctermfg=237 guifg=Grey70
-  " Plugins
-  hi ALEErrorLine cterm=bold,underline
-  highlight SignifySignAdd    cterm=bold ctermbg=none  ctermfg=green
-  highlight SignifySignDelete cterm=bold ctermbg=none  ctermfg=red
-  highlight SignifySignChange cterm=bold ctermbg=none  ctermfg=blue
+  if has('gui_running') && g:colors_name == 'onedark'
+    hi VertSplit cterm=none ctermfg=103 ctermbg=none gui=none guifg=#5C6370 guibg=bg
+    hi EndOfBuffer ctermfg=16 guifg=bg
+    hi StatusLine   ctermfg=233  ctermbg=103 cterm=bold gui=bold guibg=#21262d
+    hi StatusLineNC ctermfg=103 ctermbg=none cterm=none,underline guibg=bg gui=underline
+    hi SignColumn ctermbg=none
+    hi TabLineSel cterm=bold,underline ctermbg=16 ctermfg=7 gui=bold,underline
+  else
+    hi Visual ctermbg=10 ctermfg=0
+    hi DiffAdd cterm=none ctermfg=232 gui=none guifg=black
+    hi DiffChange cterm=none ctermfg=232 gui=none guifg=black
+    hi DiffDelete cterm=none ctermfg=232 gui=none guifg=black
+    hi DiffText cterm=none ctermfg=232 gui=none guifg=black
+    hi TabLineFill cterm=bold ctermbg=none gui=none guibg=bg
+    hi TabLineSel cterm=bold,underline ctermbg=16 ctermfg=7 guibg=bg guifg=black gui=bold,underline
+    hi TabLine cterm=none ctermbg=none ctermfg=246 guibg=bg guifg=#8787af gui=none
+    hi VemTablineShown cterm=none ctermbg=16 ctermfg=7 guibg=bg guifg=black
+    hi Folded cterm=none ctermbg=none gui=none guibg=bg
+    hi Search ctermfg=232 ctermbg=10 guifg=black guibg=Cyan1
+    hi IncSearch cterm=none ctermfg=232 ctermbg=9
+    hi VertSplit cterm=none ctermfg=103 ctermbg=none gui=none guifg=#000000 guibg=#e4e4e4
+    hi EndOfBuffer ctermfg=16 guifg=bg
+    hi MatchParen cterm=underline ctermbg=none gui=underline guibg=bg
+    hi CursorLine cterm=none ctermbg=17
+    hi Cursor gui=reverse guibg=bg
+    hi StatusLine   ctermfg=233  ctermbg=103 cterm=bold gui=bold guibg=#bcbcbc
+    hi StatusLineNC ctermfg=103 ctermbg=none cterm=none,underline guibg=bg gui=underline
+    hi SpellBad ctermbg=234 ctermfg=15 cterm=bold,underline
+    hi SpellCap ctermbg=234 ctermfg=14 cterm=underline
+    hi ALEErrorLine cterm=bold,underline
+    hi SignColumn ctermbg=none
+    hi ColorColumn ctermbg=234 guibg=grey85
+    hi SpecialKey term=bold ctermfg=237 guifg=Grey70
+    hi Whitespace term=bold ctermfg=237 guifg=Grey70
+    " Plugins
+    hi ALEErrorLine cterm=bold,underline
+    highlight SignifySignAdd    cterm=bold ctermbg=none  ctermfg=green
+    highlight SignifySignDelete cterm=bold ctermbg=none  ctermfg=red
+    highlight SignifySignChange cterm=bold ctermbg=none  ctermfg=blue
+  endif
 endfunction
 fun! RestoreCursorPosition() abort
   if &ft =~ 'gitcommit\|gitcommit'
@@ -1242,6 +1252,9 @@ if has('gui_running')
     set guifont=DejaVu\ Sans\ Mono\ Book
     set lines=40 columns=150
   elseif has('win32')
+    if !empty(globpath(&rtp, 'colors/onedark.vim'))
+      colorscheme onedark
+    endif
     set guifont=Consolas:h10
     set linespace=0
     set lines=45 columns=160

@@ -15,7 +15,6 @@ dreadnaut/vim-bargreybars
 arthurxavierx/vim-caser
 tomtom/tcomment_vim
 romainl/vim-cool
-drzel/vim-in-proportion
 andymass/vim-matchup
 junegunn/vim-peekaboo
 tpope/vim-repeat
