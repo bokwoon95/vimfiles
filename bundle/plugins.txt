@@ -26,3 +26,4 @@ jszakmeister/vim-togglecursor
 dyng/ctrlsf.vim
 inkarkat/vim-ingo-library
 inkarkat/vim-SpellCheck
+joshdick/onedark.vim
