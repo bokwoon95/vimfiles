@@ -20,6 +20,8 @@ junegunn/vim-peekaboo
 tpope/vim-repeat
 tpope/vim-surround
 tpope/vim-ragtag
+tpope/vim-fugitive
+mhinz/vim-signify
 jpalardy/vim-slime
 jszakmeister/vim-togglecursor
 dyng/ctrlsf.vim

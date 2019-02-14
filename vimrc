@@ -689,6 +689,19 @@ let g:ctrlsf_mapping = {
       \"stop"    : "<C-C>"
       \}
 "}}}
+"{{{ vim-signify
+let g:signify_vcs_list = ['git']
+nnoremap <expr> <C-c><C-g> sy#repo#get_stats() != [-1,-1,-1] ?
+            \!&diff ? "
+            \:SignifyDiff<CR>
+            \:let g:prevwin=win_getid()<CR>
+            \:let b:wsv=winsaveview()<CR>
+            \:windo diffoff<CR>:windo diffthis<CR>
+            \:silent! call win_gotoid(g:prevwin)<CR>
+            \:silent! call winrestview(b:wsv)<CR>zz
+            \": ":silent! diffoff! \| silent! tabclose<CR>
+            \": ""
+"}}}
 "}}}
 
 syntax enable
