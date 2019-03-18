@@ -285,9 +285,9 @@ function! sy#repo#diffmode(do_tab) abort
     execute chdir fnameescape(cwd)
   endtry
   silent 1delete
-  diffthis
   set buftype=nofile bufhidden=wipe nomodified
   let &filetype = ft
+  diffthis
   wincmd p
   normal! ]czt
 endfunction
@@ -299,7 +299,13 @@ function! s:initialize_job(vcs) abort
     if has('nvim')
       let cmd = &shell =~ 'cmd' ? vcs_cmd : ['sh', '-c', vcs_cmd]
     else
-      let cmd = join([&shell, &shellcmdflag, vcs_cmd])
+      if &shell =~ 'cmd'
+        let cmd = vcs_cmd
+      elseif empty(&shellxquote)
+        let cmd = join([&shell, &shellcmdflag, &shellquote, vcs_cmd, &shellquote])
+      else
+        let cmd = join([&shell, &shellcmdflag, &shellxquote, vcs_cmd, &shellxquote])
+      endif
     endif
   else
     let cmd = ['sh', '-c', vcs_cmd]

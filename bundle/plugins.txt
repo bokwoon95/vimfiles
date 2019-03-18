@@ -21,6 +21,7 @@ tpope/vim-repeat
 tpope/vim-surround
 tpope/vim-ragtag
 tpope/vim-fugitive
+tpope/vim-markdown
 mhinz/vim-signify
 jpalardy/vim-slime
 jszakmeister/vim-togglecursor

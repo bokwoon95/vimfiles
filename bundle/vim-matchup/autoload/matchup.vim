@@ -27,6 +27,7 @@ function! s:init_options()
   call s:init_option('matchup_matchparen_deferred', 0)
   call s:init_option('matchup_matchparen_deferred_show_delay', 50)
   call s:init_option('matchup_matchparen_deferred_hide_delay', 700)
+  call s:init_option('matchup_matchparen_deferred_fade_time', 0)
   call s:init_option('matchup_matchparen_stopline', 400)
   call s:init_option('matchup_matchparen_pumvisible', 1)
   call s:init_option('matchup_matchparen_nomode', '')
@@ -115,6 +116,17 @@ function! s:init_oldstyle_ops() " {{{1
             \ '<plug>(matchup-o_'.l:opforce.')<plug>(matchup-a%)')
     endfor
   endif
+endfunction
+
+function! s:make_oldstyle_omaps(lhs, rhs)
+  if !s:old_style_ops
+    return 0
+  endif
+  for l:opforce in ['', 'v', 'V', '<c-v>']
+    silent! execute 'omap' l:opforce.a:lhs
+          \ '<plug>(matchup-o_'.l:opforce.')<plug>(matchup-'.a:rhs.')'
+  endfor
+  return 1
 endfunction
 
 let s:old_style_ops = !has('patch-8.1.0648')
