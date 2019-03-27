@@ -24,7 +24,7 @@ silent! set macmeta
 
 "{{{ Meta for Terminal Vim
 if !has("gui_running") && !has('nvim')
-  "Bind selected meta for selected keys: dbfnp<BS> hjkl vecyq
+  "Bind selected meta for selected keys: dbfnp<BS> hjkl vecyq 7890 ;' st
   silent! exe "set <S-Left>=\<Esc>b"
   silent! exe "set <S-Right>=\<Esc>f"
   silent! exe "set <F31>=\<Esc>d"| "M-d
@@ -87,6 +87,12 @@ if !has("gui_running") && !has('nvim')
   silent! exe "set <F27>=\<Esc>'"| "M-'
   map! <F27> <M-'>
   map <F27> <M-'>
+  silent! exe "set <F28>=\<Esc>s"| "M-s
+  map! <F28> <M-s>
+  map <F28> <M-s>
+  silent! exe "set <F29>=\<Esc>t"| "M-t
+  map! <F29> <M-t>
+  map <F29> <M-t>
 endif
 if has('macunix')
   set shell=/bin/zsh
@@ -96,15 +102,6 @@ elseif has('unix')
   else
     set shell=/bin/bash
   endif
-elseif has('windows')
-  " set shell=C:\Users\cbw\AppData\Local\wsltty\bin\wslbridge.exe
-  " set shell=C:\Users\cbw\AppData\Local\wsltty\bin\dash.exe
-  " set shell=C:\Windows\System32\wsl.exe
-  " set shell=C:\Users\cbw\AppData\Local\wsltty\bash.exe
-  " set shell='c:\msys64\usr\bin\bash.exe --rcfile /foo/bar/mybashrc'
-  " set shellpipe=|
-  " set shellredir=>
-  " set shellcmdflag=
 endif
 "}}}
 "{{{ Hardcoded defaults
@@ -742,6 +739,7 @@ set whichwrap+=[,],<,>         " <Left> & <Right> keys will wrap to prev/next li
 syntax sync minlines=256       " start highlighting from 256 lines backwards
 set synmaxcol=300              " do not highlight very long lines
 set autoread                   " Reload files if they have been changed externally
+set lazyredraw                 " Wait for changes to finish before redrawing screen
 augroup Checkt
   autocmd!
   autocmd FocusGained,BufEnter * checktime " To trigger vim's autoread on focus gained or buffer enter
@@ -767,8 +765,9 @@ noremap <C-l> 4<C-e>
 nnoremap <C-x>b :ls<CR>:b<Space>
 cnoremap <silent> <expr> <CR> getcmdline() == "b " ? "\<C-c>:b#\<CR>" : "\<CR>"
 nnoremap <C-x><C-h> :setlocal hlsearch!<bar>set hlsearch?<CR>
-inoremap <expr> <C-y> !pumvisible() ? "\<C-o>mm\<C-o>:set paste\<CR>\<C-r>+\<C-o>:set nopaste\<CR>\<Esc>'[=']`mi" : "\<C-y>"
-command! TT verbose setlocal ts? sts? sw? et?
+" inoremap <expr> <C-y> !pumvisible() ? "\<C-o>mm\<C-o>:set paste\<CR>\<C-r>+\<C-o>:set nopaste\<CR>\<Esc>'[=']`mi" : "\<C-y>"
+inoremap <expr> <C-y> !pumvisible() ? "<C-o>:set paste<CR><C-r>+<C-o>:set nopaste<CR>" : "\<C-y>"
+command! TL verbose setlocal ts? sts? sw? et?
 command! T2 setlocal ts=2 sts=2 sw=2 et | echo "indentation set to 2 spaces"
 command! T4 setlocal ts=4 sts=4 sw=4 et | echo "indentation set to 4 spaces"
 command! Tb4 setlocal ts=4 sts=4 sw=4 noet | echo "indentation set to 4-spaced Tabs"
@@ -880,7 +879,7 @@ nnoremap <expr> <C-x><C-r> &diff ? "
       \:silent! call winrestview(b:wsv)<CR>
       \": ""
 nnoremap <expr> <C-x><C-d> &diff ? ":diffget<CR>" : ""
-cnoremap <C-j> <Down>
+cmap <C-j> <Down>
 nnoremap gh `[v`]| "Select last pasted text
 nnoremap <expr> <C-c><C-c> bufname("") == "[Command Line]" ? ":close<CR>" : ""
 " cnoremap sudow w !sudo tee % >/dev/null
@@ -903,8 +902,31 @@ fun! Checkt(...) abort
 endfun
 command! EE call Checkt()
 command! EA call Checkt(1)
+fun! Bufdo(cmd) abort
+  let currbufnr = bufnr("%")
+  execute "bufdo " . a:cmd
+  execute "buffer" . currbufnr
+endfun
+command! -nargs=1 -complete=command Bufdo silent call Bufdo(<q-args>)
 xmap <S-Tab> %
 inoremap <C-g><C-d> <C-d>| "C-t indents, C-g C-d de-indents in insert mode
+command! Timestamps %s/^\s*\zs\(\d\{10}\)/\=strftime('%c', submatch(1))/g
+xnoremap <expr> p '"_d"' . v:register . 'p'
+xnoremap <expr> P '"_d"' . v:register . 'P'
+nnoremap gf :set nohidden<CR>gf
+fun! Bw()
+  set nohidden
+  for i in range(1, bufnr('$'))
+    if getbufvar(i, '&filetype') == "netrw"
+      silent execute 'bwipeout! ' . i
+    endif
+  endfor
+  set hidden
+endfun
+command! Bw call Bw()
+nnoremap c "_c
+nnoremap C "_C
+nnoremap D "_D
 "}}}
 "{{{ Wildmenu Macros
 nnoremap <M-e> :e<Space><C-z>
@@ -946,11 +968,9 @@ inoremap <M-q><M--> <C-v>u2717| "✗ XX
 ":h digraph-table for a list of utf8 digraphs you can insert in vim
 "}}}
 "{{{ Buffer Management
-nnoremap <M-s> :bn<CR>
-nnoremap <M-a> :bp<CR>
 nnoremap <C-s> :bn<CR>
 nnoremap <C-q> :bp<CR>
-nnoremap gb :buffers<CR>:buffer<Space><C-z>
+nnoremap gb :buffers<CR>:buffer<Space>
 " nnoremap <Leader>xbd :bp<bar>bd#<CR>| "bd w/o closing window
 if !empty(globpath(&rtp, 'plugin/vem_tabline.vim'))
   if g:vem_tabline_show == 1
@@ -1011,33 +1031,35 @@ nnoremap <expr> <C-g> bufname("") =~ "NERD_tree_\\d"  ? ":NERDTreeToggle<CR>" :
       \ getwininfo(win_getid())[0]['loclist'] ? ":lclose<CR>" : "<C-g>"
 " see :h expression-syntax for why =~ over ==
 "undo
-inoremap <C-_> <C-o>u<C-o>u
+inoremap <C-_> <C-c>u
 inoremap <CR> <C-g>u<CR>
 "movement
 inoremap <C-b> <Left>
-inoremap <expr> <C-n> pumvisible() ? "<Down>": "<C-o>gj"
-inoremap <expr> <C-p> pumvisible() ? "<Up>": "<C-o>gk"
-inoremap <expr> <C-M-n> pumvisible() ? "<Down><Down><Down>": "<C-o>5gj"
-inoremap <expr> <C-M-p> pumvisible() ? "<Up><Up><Up>": "<C-o>5gk"
+inoremap <expr> <C-n> pumvisible() ? "<Down>": "<C-c>gja"
+inoremap <expr> <C-p> pumvisible() ? "<Up>": "<C-c>gka"
+inoremap <expr> <C-M-n> pumvisible() ? "<Down><Down><Down>": "<C-c>5gja"
+inoremap <expr> <C-M-p> pumvisible() ? "<Up><Up><Up>": "<C-c>5gka"
 inoremap <C-f> <Right>
 inoremap <M-f> <S-Right>
 inoremap <M-b> <S-Left>
 inoremap <C-a> <C-c>I
 inoremap <C-e> <End>
 "forward delete, backward delete & character delete
-inoremap <M-d> <C-g>u<C-o>vec<C-g>u
+inoremap <M-d> <C-g>u<C-c>vec<C-g>u
 inoremap <M-BS> <C-g>u<C-w><C-g>u
 inoremap <C-BS> <C-g>u<C-w><C-g>u
 inoremap <C-w> <C-g>u<C-w><C-g>u
 inoremap <C-d> <Del>
 "kill to EOL, kill to SOL, and kill entire line
-inoremap <C-k> <C-o>D
+inoremap <C-k> <C-c>`^Da
 inoremap <C-M-k> <C-k>| "C-M-k replaces C-k for entering digraphs
 "save
 inoremap <C-x><C-s> <C-o>:w<CR>
 nnoremap <C-x><C-s> :w<CR>
 "paste from vim register
-inoremap <M-y> \<C-o>:set paste\<CR>\<C-r>"\<C-o>:set nopaste\<CR>
+" inoremap <M-y> \<C-c>:set paste\<CR>a\<C-r>"\<C-c>:set nopaste\<CR>a
+" inoremap <M-y> <C-r>"
+inoremap <M-y> <C-o>mm<C-o>:set paste<CR><C-r>+<C-o>:set nopaste<CR><C-o>`]
 "emacs misc
 nnoremap <C-x><C-c> :wqa<CR>
 nnoremap <C-x><C-x><C-c> :qa!<CR>
@@ -1229,7 +1251,7 @@ function! MyHighlights() abort
     hi SpellBad ctermbg=234 ctermfg=15 cterm=bold,underline
     hi SpellCap ctermbg=234 ctermfg=14 cterm=underline
     hi ALEErrorLine cterm=bold,underline
-    hi SignColumn ctermbg=none
+    hi SignColumn ctermbg=none guibg=bg
     hi ColorColumn ctermbg=234 guibg=grey85
     hi SpecialKey term=bold ctermfg=237 guifg=Grey70
     hi Whitespace term=bold ctermfg=237 guifg=Grey70
@@ -1257,6 +1279,8 @@ augroup Autocommands
   " autocmd BufEnter NERD_tree_* setlocal cursorline
   " autocmd BufLeave NERD_tree_* setlocal nocursorline
   autocmd BufNewFile,BufRead *.fish setlocal filetype=fish
+  autocmd BufNewFile,BufRead *.ejs setlocal filetype=html
+  autocmd BufNewFile,BufRead *.vue setlocal filetype=html
   autocmd BufEnter,BufLeave * if &buftype ==# 'terminal' | let g:t_bufnum = expand('<abuf>') | endif
   autocmd CompleteDone * pclose
 augroup END
@@ -1344,6 +1368,85 @@ func! Nr2Bin(nr)
   return r
 endfunc
 "}}}
+"{{{ ConvertBase.vim
+" Convert from decimal to a named base.
+function! ConvertToBase(int, base)
+  if (a:base < 2 || a:base > 36)
+    echohl ErrorMsg
+    echo "Bad base - must be between 2 and 36."
+    echohl None
+    return ''
+  endif
+  if (a:int == 0)
+    return 0
+  endif
+  let out=''
+  let isnegative = 0
+  let int=a:int
+  if (int < 0)
+    let isnegative = 1
+    let int = - int
+  endif
+  while (int != 0)
+    let out = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"[(int % a:base)] . out
+    let int = int / a:base
+  endwhile
+  if isnegative
+    let out = '-' . out
+  endif
+  return out
+endfunction
+" Convert from a named base to decimal.  Stop at any character that isn't a
+" "base digit" (that is, an invalid character).
+function! ConvertFromBase(str, base)
+  let saveignorecase = &ignorecase
+  let &ignorecase = 1
+  if (a:base < 2 || a:base > 36)
+    echohl ErrorMsg
+    echo "Bad base - must be between 2 and 36."
+    echohl None
+    return ''
+  endif
+  if (a:str == '0')
+    return 0
+  endif
+  let isnegative = 0
+  let str = a:str
+  if (str[0] == '-')
+    let isnegative = 1
+    let str = strpart(str,1,strlen(str))
+  endif
+  let out = 0
+  let pos = 0
+  let len = strlen(str)
+  while (len > 0)
+    let thisdigit = match("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ", str[pos])
+    if (thisdigit < 0 || thisdigit > a:base)
+      break
+    endif
+    let i = 1
+    let mult = 1
+    while (i < len)
+      let mult = a:base * mult
+      let i = i + 1
+    endwhile
+    let len = len - 1
+    let pos = pos + 1
+    let thisdigit = thisdigit * mult
+    let out = out + thisdigit
+  endwhile
+  let &ignorecase = saveignorecase
+  if isnegative
+    let out = '-' . out
+  endif
+  return out
+endfunction
+" Convert from a named base to a named base.
+function! ConvertBases(str, base1, base2)
+  let out = ConvertFromBase(a:str, a:base1)
+  return ConvertToBase(out, a:base2)
+endfunction
+"}}}
 "{{{ /search suggestions
 " function! s:search_mode_start()
 "     cnoremap <buffer> <Tab> <C-f>a<C-n>
@@ -1400,20 +1503,136 @@ command! -nargs=1 -complete=command Redir silent call Redir(<q-args>)
 " 	:Redir hi ............. show the full output of command ':hi' in a scratch window
 " 	:Redir !ls -al ........ show the full output of command ':!ls -al' in a scratch window
 "}}}
+"{{{ KeepOpen
+fun! KeepOpen(...)
+  let l:exclude = map(copy(a:000), {i,x -> str2nr(x)})
+  let l:buflist = filter(range(1, bufnr('$')), 'buflisted(v:val)')
+  let g:dellist = filter(l:buflist, {i,x -> !(index(l:exclude, x) >= 0)})
+  if len(g:dellist) > 1
+    execute 'bd ' . join(g:dellist, ' ')
+  endif
+endfun
+command! -nargs=+ KeepOpen call KeepOpen(<f-args>)
+nnoremap <C-x><C-x><C-k> :ls<CR>:KeepOpen<Space>
+"}}}
 "}}}
 
+"{{{ :terminal settings
+tnoremap <C-\><C-\> <C-\><C-n>
+augroup Terminal
+  autocmd!
+  if has('nvim')
+    autocmd TermOpen * setlocal nonumber norelativenumber
+    autocmd TermOpen,BufWinEnter,WinEnter * if &buftype == 'terminal' |startinsert| endif
+  else
+    autocmd BufWinEnter,WinEnter * if &buftype == 'terminal' |silent! normal i| endif
+  endif
+augroup END
+nnoremap <expr> q &buftype == "terminal" ? "i" : "q"
+fun! Term(...) abort
+  let name =
+        \(a:0 > 0 && a:1 != "")   ? "term:" . a:1  :
+        \exists("g:lasttermname") ? g:lasttermname :
+        \"term:shell"
+  if bufwinnr(name) > 0
+    execute bufwinnr(name) . "wincmd c"
+  else
+    15split
+    if bufexists(name)
+      execute "buffer " . name
+    else
+      if has('nvim')
+        terminal
+      else
+        terminal ++curwin
+      endif
+      execute "file " . name
+      set nobuflisted
+    endif
+    let g:lasttermname = name
+  endif
+endfun
+fun! s:termnames(ArgLead, CmdLine, CursorPos) abort
+  let g:termnames = []
+  for bn in range(1,bufnr('$'))
+    if bufname(bn) =~# "term:.*" && bufloaded(bn)
+      call add(g:termnames, bufname(bn)[5:-1])
+    endif
+  endfor
+  return filter(g:termnames, 'v:val =~ "^'. a:ArgLead .'"')
+endfun
+fun! s:term(...) abort
+  let name = (a:0 > 0 && a:1 != "") ? a:1  : ""
+  if exists("g:lasttermname") && bufwinnr(g:lasttermname) > 0
+    execute bufwinnr(g:lasttermname) . "wincmd c"
+  endif
+  silent call Term(name)
+endfun
+command! -nargs=? -complete=customlist,s:termnames Term silent call Term(<f-args>)
+command! -nargs=? -complete=customlist,s:termnames T silent call s:term(<f-args>)
+command! -nargs=? -complete=customlist,s:termnames TT silent call Term(<f-args>)
+nnoremap <C-w><C-t> :call Term()<CR>
+tnoremap <C-w><C-t> <C-\><C-n>:call Term()<CR>
+"}}}
+"{{{ Neovim :terminal Settings
+if has('nvim')
+  highlight TermCursor ctermfg=1 guifg=1
+  "{{{Escaping, Renaming & Opening Terminal Buffers
+  tnoremap <F2> <C-\><C-n>:NERDTreeToggle<CR>
+  tnoremap <C-x><C-n> <C-\><C-n>:NERDTreeToggle<CR>
+  "}}}
+  "{{{Buffer Management in Terminal Buffers
+  tnoremap <C-s> <C-\><C-n>:bn<CR>
+  tnoremap <C-q> <C-\><C-n>:bp<CR>
+  tnoremap <C-x><C-b> <C-\><C-n>:Buffers<CR>
+  tnoremap <C-x>b <C-\><C-n>:ls<CR>:b<Space><C-z>
+  tnoremap <C-x><C-f> <C-\><C-n>:Files<CR>
+  tnoremap <C-x>f <C-\><C-n>:e<Space>
+  tnoremap <A-p> <C-\><C-n>:Files<CR>
+  "}}}
+  "{{{Window Management in Terminal Buffers
+  tnoremap <A-w> <C-\><C-n><C-w>
+  tnoremap <C-w> <C-\><C-n><C-w>
+  tnoremap <C-w><C-w> <C-w>
+  tnoremap <A-h> <C-\><C-n><C-w>h
+  tnoremap <A-j> <C-\><C-n><C-w>j
+  tnoremap <A-k> <C-\><C-n><C-w>k
+  tnoremap <A-l> <C-\><C-n><C-w>l
+  if !empty(globpath(&rtp, 'plugin/tmux_navigator.vim'))
+    tnoremap <silent> <A-h> <C-\><C-n>:TmuxNavigateLeft<CR>
+    tnoremap <silent> <A-j> <C-\><C-n>:TmuxNavigateDown<CR>
+    tnoremap <silent> <A-k> <C-\><C-n>:TmuxNavigateUp<CR>
+    tnoremap <silent> <A-l> <C-\><C-n>:TmuxNavigateRight<CR>
+    tnoremap <silent> <A-\> <C-\><C-n>:TmuxNavigatePrevious<CR>
+  endif
+  tnoremap <A-7> <C-\><C-n><C-w><
+  tnoremap <A-0> <C-\><C-n><C-w>>
+  tnoremap <A-8> <C-\><C-n><C-w>-
+  tnoremap <A-9> <C-\><C-n><C-w>+
+  "}}}
+  "{{{Tab Management in Terminal Buffers
+  tnoremap <A-t><A-a><A-e> <C-\><C-n>:tabe %<CR>
+  tnoremap <A-t><A-a><A-c> <C-\><C-n>:tabc<CR>
+  tnoremap <A-[> <C-\><C-n>gT
+  tnoremap <A-]> <C-\><C-n>gt
+  "}}}
+  tnoremap <C-^> <C-\><C-n>:e<Space>#<CR>| "switch from terminal to prev buffer
+  tnoremap <M-z> pwd\|pbcopy<CR><C-\><C-n>:cd <C-r>+<CR>i| "make vim CWD same as terminal CWD
+  tnoremap <M-e> <C-\><C-n>:e<Space>
+  tnoremap <M-;> <C-\><C-n>:
+  let $FZF_DEFAULT_OPTS .= ' --no-height --bind=ctrl-j:preview-down,ctrl-k:preview-up'
+endif
+"}}}
 "{{{ Vim8 :terminal Settings
 if !has('nvim')
-  augroup Vim8Terminal
-    autocmd!
-    autocmd BufWinEnter,BufEnter,WinEnter * if &buftype ==# "terminal" |startinsert| endif
-  augroup END
   silent! tnoremap <c-w><c-[> <c-\><c-n>
   silent! nnoremap <expr> <c-w><c-i> &buftype ==# 'terminal' ? "i" : ""
   silent! nnoremap <expr> <c-w><c-a> &buftype ==# 'terminal' ? "a" : ""
   silent! tnoremap <c-x><c-b> <c-\><c-n>:ls<cr>:b<space>
   silent! tnoremap <c-q> <c-\><c-n>:bp<cr>
   silent! tnoremap <c-s> <c-\><c-n>:bn<cr>
-  silent! cabbrev termm term ++curwin
+  silent! cnoreabbrev termm term ++curwin
+  hi! link StatusLineTerm   StatusLine
+  hi! link StatusLineTermNC StatusLineNC
 endif
 "}}}
