@@ -29,3 +29,5 @@ dyng/ctrlsf.vim
 inkarkat/vim-ingo-library
 inkarkat/vim-SpellCheck
 joshdick/onedark.vim
+JuliaEditorSupport/julia-vim
+fatih/vim-go
