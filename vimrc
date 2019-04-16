@@ -740,22 +740,16 @@ syntax sync minlines=256       " start highlighting from 256 lines backwards
 set synmaxcol=300              " do not highlight very long lines
 set autoread                   " Reload files if they have been changed externally
 set lazyredraw                 " Wait for changes to finish before redrawing screen
+set noequalalways              " Don't resize existing windows when a window is closed
+set nostartofline              " Stay in the same column when doing a gg or G jump
 augroup Checkt
   autocmd!
   autocmd FocusGained,BufEnter * checktime " To trigger vim's autoread on focus gained or buffer enter
+  autocmd FocusGained,BufEnter * silent! SignifyRefresh
 augroup END
 autocmd! Filetype vim setlocal foldmethod=marker ts=2 sts=2 sw=2 et
 command! GMS /^<<<<<<< .*$\|^>>>>>>> .*$\|^=======$
 set foldtext=repeat('\ ',indent(v:foldstart)).foldtext()
-set infercase
-if !empty(glob('~/.vim/words'))
-  set dictionary+=~/.vim/words
-  set spellfile=~/.vim/spell/en.utf-8.add
-elseif !empty(glob('~/vimfiles/words'))
-  set dictionary+=~/vimfiles/words
-  set spellfile=~/vimfiles/spell/en.utf-8.add
-endif
-set spellcapcheck=
 
 " Survival Pack
 noremap <C-j> 5gj
@@ -770,6 +764,7 @@ inoremap <expr> <C-y> !pumvisible() ? "<C-o>:set paste<CR><C-r>+<C-o>:set nopast
 command! TL verbose setlocal ts? sts? sw? et?
 command! T2 setlocal ts=2 sts=2 sw=2 et | echo "indentation set to 2 spaces"
 command! T4 setlocal ts=4 sts=4 sw=4 et | echo "indentation set to 4 spaces"
+command! Tb2 setlocal ts=2 sts=2 sw=2 noet | echo "indentation set to 2-spaced Tabs"
 command! Tb4 setlocal ts=4 sts=4 sw=4 noet | echo "indentation set to 4-spaced Tabs"
 command! Spa setlocal paste
 command! Sna setlocal nopaste
@@ -834,7 +829,7 @@ noremap <M-d> "_d| "Black_hole delete without saving to register
 noremap Y "+y| "Copy to system clipboard in normal/visual mode
 nnoremap YY "+yy| "Copy to system clipboard in normal/visual mode
 nnoremap y7 m`^yg_``| "yank current line (without newline)
-nnoremap Y& m`^"+yg$``| "Copy current line (without newline) to system clipboard
+nnoremap Y& m`^"+yg_``| "Copy current line (without newline) to system clipboard
 nnoremap <M-p> "+p| "Paste from system clipboard
 nnoremap <Leader>pc :let<Space>@+=expand('%:p:h')<CR>| "copy file's directory path to clipboard
 nnoremap <Leader>fc :let<Space>@+=expand('%:p')<CR>| "copy file's full path+filename to clipboard
@@ -913,7 +908,7 @@ inoremap <C-g><C-d> <C-d>| "C-t indents, C-g C-d de-indents in insert mode
 command! Timestamps %s/^\s*\zs\(\d\{10}\)/\=strftime('%c', submatch(1))/g
 xnoremap <expr> p '"_d"' . v:register . 'p'
 xnoremap <expr> P '"_d"' . v:register . 'P'
-nnoremap gf :set nohidden<CR>gf
+nnoremap gf :set nohidden<CR>gf:set hidden<CR>
 fun! Bw()
   set nohidden
   for i in range(1, bufnr('$'))
@@ -924,6 +919,7 @@ fun! Bw()
   set hidden
 endfun
 command! Bw call Bw()
+noremap x "_x
 nnoremap c "_c
 nnoremap C "_C
 nnoremap D "_D
@@ -1072,32 +1068,39 @@ cnoremap <C-a> <Home>
 cnoremap <C-b> <End>
 cnoremap <C-M-f> <S-Right>
 cnoremap <C-M-b> <S-Left>
+"vim-rsi
+cnoremap <C-x><C-a> <C-a>
+cnoremap <C-b> <Left>
+cnoremap <expr> <C-f> getcmdpos()>strlen(getcmdline())?&cedit:"\<lt>Right>"
+cnoremap <expr> <C-d> getcmdpos()>strlen(getcmdline())?"\<lt>C-d>":"\<lt>Del>"
+cnoremap <M-b> <S-Left>
+cnoremap <M-f> <S-Right>
 "}}}
 "{{{ Vim Unimpaired
 "Insert space above and below
-function! s:BlankUp(count) abort
-  put!=repeat(nr2char(10), a:count)
-  ']+1
-  silent! call repeat#set("\<Plug>unimpairedBlankUp", a:count)
-endfunction
-function! s:BlankDown(count) abort
-  put =repeat(nr2char(10), a:count)
-  '[-1
-  silent! call repeat#set("\<Plug>unimpairedBlankDown", a:count)
-endfunction
-nnoremap <silent> [<Space> :<C-U>call <SID>BlankUp(v:count1)<CR>
-nnoremap <silent> ]<Space> :<C-U>call <SID>BlankDown(v:count1)<CR>
-
-"Settings
-nnoremap [ol :setlocal list<CR>
-nnoremap ]ol :setlocal nolist<CR>
-nnoremap [oh :setlocal hlsearch<CR>
-nnoremap ]oh :setlocal nohlsearch<CR>
-inoremap <C-x><C-h> <C-o>:setlocal hlsearch!<bar>set hlsearch?<CR>
-nnoremap [os :setlocal spell<CR>
-nnoremap ]os :setlocal nospell<CR>
-nnoremap [od :diffthis<CR>
-nnoremap ]od :diffoff<CR>
+" function! s:BlankUp(count) abort
+"   put!=repeat(nr2char(10), a:count)
+"   ']+1
+"   silent! call repeat#set("\<Plug>unimpairedBlankUp", a:count)
+" endfunction
+" function! s:BlankDown(count) abort
+"   put =repeat(nr2char(10), a:count)
+"   '[-1
+"   silent! call repeat#set("\<Plug>unimpairedBlankDown", a:count)
+" endfunction
+" nnoremap <silent> [<Space> :<C-U>call <SID>BlankUp(v:count1)<CR>
+" nnoremap <silent> ]<Space> :<C-U>call <SID>BlankDown(v:count1)<CR>
+"
+" "Settings
+" nnoremap [ol :setlocal list<CR>
+" nnoremap ]ol :setlocal nolist<CR>
+" nnoremap [oh :setlocal hlsearch<CR>
+" nnoremap ]oh :setlocal nohlsearch<CR>
+" inoremap <C-x><C-h> <C-o>:setlocal hlsearch!<bar>set hlsearch?<CR>
+" nnoremap [os :setlocal spell<CR>
+" nnoremap ]os :setlocal nospell<CR>
+" nnoremap [od :diffthis<CR>
+" nnoremap ]od :diffoff<CR>
 nnoremap [wd :let g:prevwin=win_getid()<CR>
       \:let b:wsv=winsaveview()<CR>
       \:windo diffthis<CR>
@@ -1106,18 +1109,18 @@ nnoremap [wd :let g:prevwin=win_getid()<CR>
 nnoremap ]wd :let b:wsv=winsaveview()<CR>
       \:diffoff!<CR>
       \:silent! call winrestview(b:wsv)<CR>
-nnoremap [on :setlocal number<CR>
-nnoremap ]on :setlocal nonumber<CR>
-nnoremap [oc :setlocal cursorline<CR>
-nnoremap ]oc :setlocal nocursorline<CR>
-nnoremap [ov :setlocal virtualedit=all<CR>
-nnoremap ]ov :setlocal virtualedit=<CR>
-nnoremap [b :bprev<CR>
-nnoremap ]b :bnext<CR>
-nnoremap [l :lprevious<CR>
-nnoremap ]l :lnext<CR>
-nnoremap [q :cprevious<CR>
-nnoremap ]q :cnext<CR>
+" nnoremap [on :setlocal number<CR>
+" nnoremap ]on :setlocal nonumber<CR>
+" nnoremap [oc :setlocal cursorline<CR>
+" nnoremap ]oc :setlocal nocursorline<CR>
+" nnoremap [ov :setlocal virtualedit=all<CR>
+" nnoremap ]ov :setlocal virtualedit=<CR>
+" nnoremap [b :bprev<CR>
+" nnoremap ]b :bnext<CR>
+" nnoremap [l :lprevious<CR>
+" nnoremap ]l :lnext<CR>
+" nnoremap [q :cprevious<CR>
+" nnoremap ]q :cnext<CR>
 "}}}
 "{{{ Vim Tips
 " To apply macros to multiple lines, highlight the lines and :norm!@@
@@ -1203,6 +1206,25 @@ augroup AutosaveView
   au BufRead * silent! call Loadview()
 augroup END
 "}}}
+"{{{ Spelling
+set infercase
+if !empty(glob('~/.vim/words'))
+  set dictionary+=~/.vim/words
+  set spellfile=~/.vim/spell/en.utf-8.add
+elseif !empty(glob('~/vimfiles/words'))
+  set dictionary+=~/vimfiles/words
+  set spellfile=~/vimfiles/spell/en.utf-8.add
+endif
+set spellcapcheck=
+" Don't mark URL-like things as spelling errors
+syn match UrlNoSpell '\w\+:\/\/[^[:space:]]\+' contains=@NoSpell
+" Don't count acronyms / abbreviations as spelling errors
+" (all upper-case letters, at least three characters)
+" Also will not count acronym with 's' at the end a spelling error
+" Also will not count numbers that are part of this
+" Recognizes the following as correct:
+syn match AcronymNoSpell '\<\(\u\|\d\)\{3,}s\?\>' contains=@NoSpell
+"}}}
 
 " Set swap & undo file directory
 " if isdirectory(expand("~/.vim/.swp"))
@@ -1257,9 +1279,10 @@ function! MyHighlights() abort
     hi Whitespace term=bold ctermfg=237 guifg=Grey70
     " Plugins
     hi ALEErrorLine cterm=bold,underline
-    highlight SignifySignAdd    cterm=bold ctermbg=none  ctermfg=green
-    highlight SignifySignDelete cterm=bold ctermbg=none  ctermfg=red
-    highlight SignifySignChange cterm=bold ctermbg=none  ctermfg=blue
+    hi SignifySignAdd    cterm=bold ctermbg=none  ctermfg=green
+    hi SignifySignDelete cterm=bold ctermbg=none  ctermfg=red
+    hi SignifySignChange cterm=bold ctermbg=none  ctermfg=blue
+    hi CocInfoFloat ctermfg=black
   endif
 endfunction
 fun! RestoreCursorPosition() abort
@@ -1294,7 +1317,8 @@ if has('gui_running')
   if has('macunix')
     set linespace=1
     " set guifont=Source\ Code\ Pro:h12
-    set guifont=Go\ Mono:h12
+    " set guifont=Go\ Mono:h12
+    set guifont=FiraMono-Regular:h12
   elseif has('unix')
     set guifont=DejaVu\ Sans\ Mono\ Book
     set lines=40 columns=150
@@ -1513,7 +1537,7 @@ fun! KeepOpen(...)
   endif
 endfun
 command! -nargs=+ KeepOpen call KeepOpen(<f-args>)
-nnoremap <C-x><C-x><C-k> :ls<CR>:KeepOpen<Space>
+nnoremap <C-c><C-k> :ls<CR>:KeepOpen<Space>
 "}}}
 "}}}
 
@@ -1530,46 +1554,53 @@ augroup Terminal
 augroup END
 nnoremap <expr> q &buftype == "terminal" ? "i" : "q"
 fun! Term(...) abort
-  let name =
+  let l:currmax=0
+  let l:currbufnr=bufnr('%')
+  for l:bn in range(1,bufnr('$'))
+    let l:bufname = bufname(l:bn)
+    let l:shellnr = str2nr(l:bufname[10:-1])
+    if bufloaded(l:bn) && l:bufname =~# "term:shell.*" && l:shellnr > l:currmax
+      let l:currmax = l:shellnr
+    endif
+  endfor
+  let l:name =
         \(a:0 > 0 && a:1 != "")   ? "term:" . a:1  :
-        \exists("g:lasttermname") ? g:lasttermname :
-        \"term:shell"
-  if bufwinnr(name) > 0
-    execute bufwinnr(name) . "wincmd c"
+        \exists("b:lasttermname") ? b:lasttermname :
+        \"term:shell".(l:currmax+1)
+  if bufwinnr(l:name) > 0
+    execute bufwinnr(l:name) . "wincmd c"
+  elseif bufname('%') =~# "term:.*"
+    execute bufwinnr(bufname('%')) . "wincmd c"
   else
-    15split
-    if bufexists(name)
-      execute "buffer " . name
+    execute float2nr((winheight(0)*0.35)) . "split"
+    if bufexists(l:name)
+      execute "buffer " . l:name
     else
-      if has('nvim')
-        terminal
-      else
-        terminal ++curwin
-      endif
-      execute "file " . name
+      execute has('nvim') ? "terminal" : "terminal ++curwin"
+      execute "file " . l:name
       set nobuflisted
     endif
-    let g:lasttermname = name
+    call setbufvar(l:currbufnr, 'lasttermname', l:name)
   endif
 endfun
 fun! s:termnames(ArgLead, CmdLine, CursorPos) abort
-  let g:termnames = []
-  for bn in range(1,bufnr('$'))
-    if bufname(bn) =~# "term:.*" && bufloaded(bn)
-      call add(g:termnames, bufname(bn)[5:-1])
+  let l:termnames = []
+  for l:bn in range(1,bufnr('$'))
+    if bufname(l:bn) =~# "term:.*" && bufloaded(l:bn)
+      call add(l:termnames, bufname(l:bn)[5:-1])
     endif
   endfor
-  return filter(g:termnames, 'v:val =~ "^'. a:ArgLead .'"')
+  return filter(l:termnames, 'v:val =~ "^'. a:ArgLead .'"')
 endfun
 fun! s:term(...) abort
   let name = (a:0 > 0 && a:1 != "") ? a:1  : ""
-  if exists("g:lasttermname") && bufwinnr(g:lasttermname) > 0
-    execute bufwinnr(g:lasttermname) . "wincmd c"
+  if exists("b:lasttermname") && bufwinnr(b:lasttermname) > 0
+    execute bufwinnr(b:lasttermname) . "wincmd c"
   endif
   silent call Term(name)
 endfun
-command! -nargs=? -complete=customlist,s:termnames Term silent call Term(<f-args>)
-command! -nargs=? -complete=customlist,s:termnames T silent call s:term(<f-args>)
+command! -nargs=? -complete=customlist,s:termnames Term silent call Term(<f-args>) " Term will not replace any open terminals
+command! -nargs=? -complete=customlist,s:termnames T silent call s:term(<f-args>) " T will replace any open terminals
 command! -nargs=? -complete=customlist,s:termnames TT silent call Term(<f-args>)
 nnoremap <C-w><C-t> :call Term()<CR>
 tnoremap <C-w><C-t> <C-\><C-n>:call Term()<CR>
