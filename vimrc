@@ -102,6 +102,11 @@ elseif has('unix')
   else
     set shell=/bin/bash
   endif
+elseif has('windows') && executable('C:\Windows\Sysnative\wsl.exe')
+  set shell=C:\Windows\Sysnative\wsl.exe
+  set shellpipe=|
+  set shellredir=>
+  set shellcmdflag=
 endif
 "}}}
 "{{{ Hardcoded defaults
