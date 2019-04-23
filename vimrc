@@ -946,6 +946,7 @@ if v:version >= 700
     autocmd BufLeave * call AutoSaveWinView()
     autocmd BufEnter * call AutoRestoreWinView()
 endif
+nnoremap <C-w><C-n> <C-w><C-o>:NERDTreeToggle<CR><C-w>p
 "}}}
 "{{{ Wildmenu Macros
 nnoremap <M-e> :e<Space><C-z>
@@ -1269,7 +1270,7 @@ function! MyHighlights() abort
   if has('gui_running') && g:colors_name == 'onedark'
     hi VertSplit cterm=none ctermfg=103 ctermbg=none gui=none guifg=#5C6370 guibg=bg
     hi EndOfBuffer ctermfg=16 guifg=bg
-    hi StatusLine   ctermfg=233  ctermbg=103 cterm=bold gui=italic guibg=#08090b guifg=#ffeecd
+    hi StatusLine   ctermfg=233  ctermbg=103 cterm=bold guibg=#08090b guifg=#ffeecd
     hi StatusLineNC ctermfg=103 ctermbg=none cterm=none,underline guibg=bg gui=underline
     hi SignColumn ctermbg=none
     hi TabLineSel cterm=bold,underline ctermbg=16 ctermfg=7 gui=bold,underline
