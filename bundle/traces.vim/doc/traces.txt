@@ -6,13 +6,15 @@ CONTENTS					*traces-contents*
 
   1. Introduction ........... |traces-introduction|
   2. Requirements ........... |traces-requirements|
-  3. Settings ............... |traces-settings|
+  3. Settings ............... |traces-options|
                                 - |g:traces_enabled|
                                 - |g:traces_preserve_view_state|
                                 - |g:traces_substitute_preview|
                                 - |g:traces_skip_modifiers|
                                 - |g:traces_num_range_preview|
-  4. Highlights               |traces-highlights|
+                                - |g:traces_timeout|
+                                - |g:traces_search_timeout|
+  4. Highlights ............. |traces-highlights|
   5. Bugs ................... |traces-bugs|
   6. Changelog .............. |traces-changelog|
 
@@ -60,9 +62,8 @@ Neovim v0.2.3+
     want to use this plugin
 
 ==============================================================================
-SETTINGS					*traces-settings*
+OPTIONS 					*traces-options*
 
-------------------------------------------------------------------------------
                                                 *g:traces_enabled*
 Type: Number                                                                 ~
 Default: 1                                                                   ~
@@ -109,6 +110,25 @@ Previewed: >
 Not previewed: >
   :10
 <
+------------------------------------------------------------------------------
+                                                *g:traces_timeout*
+Type: Number                                                                 ~
+Default: 1000                                                                ~
+Minimum: 200                                                                 ~
+
+If preview is slower than the timeout (in milliseconds), it gets disabled
+until Command-line mode is entered again.  Time spent saving undo history is
+ignored.
+
+------------------------------------------------------------------------------
+                                                *g:traces_search_timeout*
+Type: Number                                                                 ~
+Default: 500                                                                 ~
+
+If searching is slower than the timeout (in milliseconds), it gets disabled
+until new character is passed to Command-line. Cannot be higher than
+|g:traces_timeout|.
+
 ==============================================================================
 HIGHLIGHTS					*traces-highlights*
 

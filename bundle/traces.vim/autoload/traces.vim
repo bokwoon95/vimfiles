@@ -1,8 +1,10 @@
 let s:cpo_save = &cpo
 set cpo-=C
 
-let s:timeout = 400
-let s:s_timeout = 300
+let s:timeout = get(g:, 'traces_timeout', 1000)
+let s:timeout = s:timeout > 200 ? s:timeout : 200
+let s:s_timeout = get(g:, 'traces_search_timeout', 500)
+let s:s_timeout = s:s_timeout > s:timeout - 100 ? s:timeout - 100 : s:s_timeout
 
 let s:cmd_pattern = '\v\C^%('
                 \ . 'g%[lobal][[:alnum:]]@!\!=|'
@@ -18,7 +20,7 @@ let s:buf = {}
 
 function! s:trim(...) abort
   if a:0 == 2
-    let a:1[0] = strcharpart(a:1[0], a:2)
+    let a:1[0] = strpart(a:1[0], a:2)
   else
     let a:1[0] = substitute(a:1[0], '^\s\+', '', '')
   endif
@@ -43,7 +45,7 @@ function! s:parse_range(range, cmdl) abort
     endif
     if address[2] != -1
       call s:trim(a:cmdl, address[2])
-      let entry.address = address[0]
+      let entry.str = address[0]
     endif
 
     " offset
@@ -57,8 +59,8 @@ function! s:parse_range(range, cmdl) abort
     " add first address
     if address[2] != -1 || offset[2] != -1
       " if offset is present but specifier is missing add '.' specifier
-      if !has_key(entry, 'address')
-        let entry.address = '.'
+      if !has_key(entry, 'str')
+        let entry.str = '.'
       endif
       call add(specifier.addresses, entry)
     else
@@ -82,7 +84,7 @@ function! s:parse_range(range, cmdl) abort
   if !empty(specifier.addresses) || delimiter[2] != -1 || !empty(a:range)
     " specifiers are not given but delimiter is present
     if empty(specifier.addresses)
-      call add(specifier.addresses, { 'address': '.' })
+      call add(specifier.addresses, { 'str': '.' })
     endif
     call add(a:range, specifier)
   endif
@@ -130,29 +132,45 @@ function! s:offset_to_num(string) abort
   return offset
 endfunction
 
-function! s:spec_to_abs(address, last_position) abort
+function! s:search(args, last_pos, shouldCache) abort
+  if !has_key(s:buf[s:nr].cache, 'patterns')
+    let s:buf[s:nr].cache.patterns = {}
+  endif
+  let patterns = s:buf[s:nr].cache.patterns
+  let key = join(a:args) . a:last_pos
+  if has_key(patterns, key)
+    return patterns[key]
+  endif
+  silent! let pos = call('search', a:args)
+  if a:shouldCache
+    let patterns[key] = pos
+  endif
+  return pos
+endfunction
+
+function! s:address_to_num(address, last_pos) abort
   let result = {}
   let result.range = []
   let result.valid = 1
   let result.regex = ''
   let s:entire_file  = 0
 
-  if     a:address.address =~# '^\d\+'
-    let lnum = str2nr(a:address.address)
+  if     a:address.str =~# '^\d\+'
+    let lnum = str2nr(a:address.str)
     call add(result.range, lnum)
 
-  elseif a:address.address ==# '.'
-    call add(result.range, a:last_position)
+  elseif a:address.str ==# '.'
+    call add(result.range, a:last_pos)
 
-  elseif a:address.address ==# '$'
+  elseif a:address.str ==# '$'
     call add(result.range, getpos('$')[1])
 
-  elseif a:address.address ==# '%'
+  elseif a:address.str ==# '%'
     call add(result.range, 1)
     call add(result.range, getpos('$')[1])
     let s:entire_file = 1
 
-  elseif a:address.address ==# '*'
+  elseif a:address.str ==# '*'
     call add(result.range, getpos('''<')[1])
     call add(result.range, getpos('''>')[1])
     if match(&cpoptions, '\*') != -1
@@ -160,9 +178,9 @@ function! s:spec_to_abs(address, last_position) abort
     endif
     let s:buf[s:nr].show_range = 1
 
-  elseif a:address.address =~# '^''.'
-    call cursor(a:last_position, 1)
-    let mark_position = getpos(a:address.address)
+  elseif a:address.str =~# '^''.'
+    call cursor(a:last_pos, 1)
+    let mark_position = getpos(a:address.str)
     if mark_position[1]
       call add(result.range, mark_position[1])
     else
@@ -170,75 +188,66 @@ function! s:spec_to_abs(address, last_position) abort
     endif
     let s:buf[s:nr].show_range = 1
 
-  elseif a:address.address =~# '\v^\/%(\\.|.){-}%([^\\]\\)@<!\/$'
-    let pattern = a:address.address[1:-2]
-    if empty(pattern)
-      let pattern = s:last_pattern
-    else
-      let s:last_pattern = pattern
+  elseif a:address.str[0] is '/'
+    let closed = a:address.str =~# '\v%([^\\]\\)@<!\/$'
+    let pattern = closed ? a:address.str[1:-2] : a:address.str[1:]
+    if closed
+      if empty(pattern)
+        let pattern = s:last_pattern
+      else
+        let s:last_pattern = pattern
+      endif
     endif
-    call cursor(a:last_position + 1, 1)
+    call cursor(a:last_pos + 1, 1)
+    if a:last_pos is line('$')
+      if &wrapscan
+        call cursor(1, 1)
+      else
+        let result.valid = 0
+      endif
+    endif
     let s:buf[s:nr].show_range = 1
-    silent! let query = search(pattern, 'nc', 0, s:s_timeout)
-    if query == 0
-      let result.valid = 0
-    endif
+    let query = s:search([pattern, 'nc', 0, s:s_timeout], a:last_pos, closed)
+    if !query | let result.valid = 0 | endif
+    if !closed | let result.regex = pattern | endif
     call add(result.range, query)
 
-  elseif a:address.address =~# '\v^\?%(\\.|.){-}%([^\\]\\)@<!\?$'
-    let pattern = a:address.address[1:-2]
+  elseif a:address.str[0] is '?'
+    let closed = a:address.str =~# '\v%([^\\]\\)@<!\?$'
+    let pattern = closed ? a:address.str[1:-2] : a:address.str[1:]
     let pattern = substitute(pattern, '\\?', '?', '')
-    if empty(pattern)
-      let pattern = s:last_pattern
-    else
-      let s:last_pattern = pattern
+    if closed
+      if empty(pattern)
+        let pattern = s:last_pattern
+      else
+        let s:last_pattern = pattern
+      endif
     endif
-    call cursor(a:last_position, 1)
+    call cursor(a:last_pos, 1)
     let s:buf[s:nr].show_range = 1
-    silent! let query = search(pattern, 'nb', 0, s:s_timeout)
-    if query == 0
-      let result.valid = 0
-    endif
+    let query = s:search([pattern, 'nb', 0, s:s_timeout], a:last_pos, closed)
+    if !query | let result.valid = 0 | endif
+    if !closed | let result.regex = pattern | endif
     call add(result.range, query)
 
-  elseif a:address.address =~# '^/.*$'
-    let pattern = a:address.address[1:]
-    call cursor(a:last_position + 1, 1)
-    silent! let query = search(pattern, 'nc', 0, s:s_timeout)
-    if !query
-      let result.valid = 0
+  elseif a:address.str ==# '\/'
+    call cursor(a:last_pos + 1, 1)
+    if a:last_pos is line('$')
+      if &wrapscan
+        call cursor(1, 1)
+      else
+        let result.valid = 0
+      endif
     endif
-    call add(result.range, query)
-    let s:buf[s:nr].show_range = 1
-    let result.regex = pattern
-
-  elseif a:address.address =~# '^?.*$'
-    let pattern = a:address.address[1:]
-    let pattern = substitute(pattern, '\\?', '?', '')
-    call cursor(a:last_position, 1)
-    silent! let query = search(pattern, 'nb', 0, s:s_timeout)
-    if !query
-      let result.valid = 0
-    endif
-    call add(result.range, query)
-    let s:buf[s:nr].show_range = 1
-    let result.regex = pattern
-
-  elseif a:address.address ==# '\/'
-    call cursor(a:last_position + 1, 1)
-    silent! let query = search(s:last_pattern, 'nc', 0, s:s_timeout)
-    if query == 0
-      let result.valid = 0
-    endif
+    let query = s:search([s:last_pattern, 'nc', 0, s:s_timeout], a:last_pos, 1)
+    if !query | let result.valid = 0 | endif
     call add(result.range, query)
     let s:buf[s:nr].show_range = 1
 
-  elseif a:address.address ==# '\?'
-    call cursor(a:last_position, 1)
-    silent! let query = search(s:last_pattern, 'nb', 0, s:s_timeout)
-    if query == 0
-      let result.valid = 0
-    endif
+  elseif a:address.str ==# '\?'
+    call cursor(a:last_pos, 1)
+    let query = s:search([s:last_pattern, 'nb', 0, s:s_timeout], a:last_pos, 1)
+    if !query | let result.valid = 0 | endif
     call add(result.range, query)
     let s:buf[s:nr].show_range = 1
   endif
@@ -275,14 +284,14 @@ function! s:evaluate_range(range_structure) abort
     for address in specifier.addresses
       " skip empty unclosed pattern specifier when range is empty otherwise
       " substitute it with current position
-      if address.address =~# '^[?/]$'
+      if address.str =~# '^[?/]$'
         let s:buf[s:nr].show_range = 1
         if empty(result.range)
           break
         endif
-        let address.address = '.'
+        let address.str = '.'
       endif
-      let query = s:spec_to_abs(address, tmp_pos)
+      let query = s:address_to_num(address, tmp_pos)
       " % specifier doesn't accept additional addresses
       if !query.valid || len(query.range) == 2 && len(specifier.addresses) > 1
         let s:range_valid = 0
@@ -348,14 +357,9 @@ function! s:get_command(cmdl) abort
   return ''
 endfunction
 
-function! s:add_flags(pattern, cmdl, type) abort
-  if !len(a:pattern)
-    return ''
-  endif
-  if !s:range_valid
-    return ''
-  endif
-  if !len(substitute(a:pattern, '\\[cCvVmM]', '', 'g'))
+function! s:add_opt(pattern, cmdl) abort
+  if empty(a:pattern) || !s:range_valid
+        \ || empty(substitute(a:pattern, '\\[cCvVmM]', '', 'g'))
     return ''
   endif
 
@@ -385,24 +389,34 @@ function! s:add_flags(pattern, cmdl, type) abort
     endif
   endif
 
-  if !empty(a:cmdl.range.abs)
-    let start = a:cmdl.range.abs[-2] - 1
-    let end   = a:cmdl.range.abs[-1] + 1
-  elseif a:type ==# 1
-    return option . a:pattern
-  elseif a:type ==# 2
-    let start = s:buf[s:nr].cur_init_pos[0] - 1
-    let end   = s:buf[s:nr].cur_init_pos[0] + 1
-  endif
+  return option . a:pattern
+endfunction
 
-  " range pattern specifer
-  if a:type == 3
-    let start = a:cmdl.range.end - 1
-    let end   = a:cmdl.range.end + 1
+function! s:add_hl_guard(pattern, range, type) abort
+  if empty(a:pattern)
+    return ''
+  endif
+  if a:type is 's'
+    if empty(a:range)
+      let start = s:buf[s:nr].cur_init_pos[0] - 1
+      let end   = s:buf[s:nr].cur_init_pos[0] + 1
+    else
+      let start = a:range[-2] - 1
+      let end   = a:range[-1] + 1
+    endif
+  elseif a:type is 'g'
+    if empty(a:range)
+      return  a:pattern
+    else
+      let start = a:range[-2] - 1
+      let end   = a:range[-1] + 1
+    endif
+  elseif a:type is 'r'
+    let start = a:range - 1
+    let end   = a:range + 1
   endif
 
   let range = '\m\%>'. start .'l' . '\%<' . end . 'l'
-
   " group is necessary to contain pattern inside range when using branches (\|)
   let group_start = '\%('
   let group_end   = '\m\)'
@@ -412,7 +426,7 @@ function! s:add_flags(pattern, cmdl, type) abort
     let group_end = '\' . group_end
   endif
 
-  return range . group_start . option . a:pattern . group_end
+  return range . group_start  . a:pattern . group_end
 endfunction
 
 function! s:parse_global(cmdl) abort
@@ -422,7 +436,7 @@ function! s:parse_global(cmdl) abort
   let r = matchlist(a:cmdl.string[0], pattern)
   if len(r)
     let args.delimiter = r[1]
-    let args.pattern   = s:add_flags((empty(r[2]) && !empty(r[3])) ? s:last_pattern : r[2], a:cmdl, 1)
+    let args.pattern   = s:add_opt((empty(r[2]) && !empty(r[3])) ? s:last_pattern : r[2], a:cmdl)
   endif
   return args
 endfunction
@@ -435,7 +449,7 @@ function! s:parse_substitute(cmdl) abort
   if len(r)
     let args.delimiter        = r[1]
     let args.pattern_org      = (empty(r[2]) && !empty(r[3])) ? s:last_pattern : r[2]
-    let args.pattern          = s:add_flags((empty(r[2]) && !empty(r[3])) ? s:last_pattern : r[2], a:cmdl, 2)
+    let args.pattern          = s:add_opt((empty(r[2]) && !empty(r[3])) ? s:last_pattern : r[2], a:cmdl)
     let args.string           = r[4]
     let args.last_delimiter   = r[5]
     let args.flags            = r[6]
@@ -450,7 +464,7 @@ function! s:parse_sort(cmdl) abort
   let r = matchlist(a:cmdl.string[0], pattern)
   if len(r)
     let args.delimiter = r[1]
-    let args.pattern   = s:add_flags((empty(r[2]) && !empty(r[3])) ? s:last_pattern : r[2], a:cmdl, 1)
+    let args.pattern   = s:add_opt((empty(r[2]) && !empty(r[3])) ? s:last_pattern : r[2], a:cmdl)
   endif
   return args
 endfunction
@@ -470,6 +484,17 @@ function! s:pos_pattern(pattern, range, delimiter, type) abort
   if g:traces_preserve_view_state || empty(a:pattern)
     return
   endif
+
+  " restore position from cache
+  if has_key(s:buf[s:nr].cache, 'pattern')
+    let cache = s:buf[s:nr].cache.pattern
+    if cache.state ==# a:
+      call winrestview(cache.view)
+      let s:moved = 1
+      return
+    endif
+  endif
+
   let stopline = 0
   if len(a:range) > 1 && !get(s:, 'entire_file')
     if a:delimiter ==# '?'
@@ -494,12 +519,32 @@ function! s:pos_pattern(pattern, range, delimiter, type) abort
   if position !=# 0
     let s:moved = 1
   endif
+
+  " save position to cache
+  let cache = {}
+  let cache.state = deepcopy(a:)
+  let cache.view = winsaveview()
+  let s:buf[s:nr].cache.pattern = cache
 endfunction
 
 function! s:pos_range(end, pattern) abort
   if g:traces_preserve_view_state || empty(a:end)
     return
   endif
+
+  " restore position from cache
+  if has_key(s:buf[s:nr].cache, 'range')
+    let cache = s:buf[s:nr].cache.range
+    if cache.state ==# a:
+      call winrestview(cache.view)
+      let s:moved = 1
+      return
+    elseif has_key(s:buf[s:nr].cache, 'pattern')
+      " drop unvalid cache
+      unlet s:buf[s:nr].cache.pattern
+    endif
+  endif
+
   if exists('s:buf[s:nr].pre_cmdl_view')
     if get(s:buf[s:nr].pre_cmdl_view, 'mode', '') =~# "^[vV\<C-V>]"
           \ && a:end > line('w$')
@@ -513,6 +558,12 @@ function! s:pos_range(end, pattern) abort
     silent! call search(a:pattern, 'c', a:end, s:s_timeout)
   endif
   let s:moved = 1
+
+  " save position to cache
+  let cache = {}
+  let cache.state = deepcopy(a:)
+  let cache.view = winsaveview()
+  let s:buf[s:nr].cache.range = cache
 endfunction
 
 function! s:highlight(group, pattern, priority) abort
@@ -640,14 +691,14 @@ function! s:preview_substitute(cmdl) abort
   call s:pos_pattern(ptrn, range, dlm, 1)
 
   if !g:traces_substitute_preview || &readonly || !&modifiable || empty(str)
-    call s:highlight('TracesSearch', ptrn, 101)
+    call s:highlight('TracesSearch', s:add_hl_guard(ptrn, range, 's'), 101)
     return
   endif
 
   call s:save_undo_history()
 
   if s:buf[s:nr].undo_file is 0
-    call s:highlight('TracesSearch', ptrn, 101)
+    call s:highlight('TracesSearch', s:add_hl_guard(ptrn, range, 's'), 101)
     return
   endif
 
@@ -684,20 +735,25 @@ endfunction
 
 function! s:preview_global(cmdl) abort
   if empty(a:cmdl.range.specifier) && has_key(a:cmdl.cmd.args, 'pattern')
-    call s:highlight('TracesSearch', a:cmdl.cmd.args.pattern, 101)
-    call s:pos_pattern(a:cmdl.cmd.args.pattern, a:cmdl.range.abs, a:cmdl.cmd.args.delimiter, 0)
+    let pattern = a:cmdl.cmd.args.pattern
+    let range = a:cmdl.range.abs
+    call s:highlight('TracesSearch', s:add_hl_guard(pattern, range, 'g'), 101)
+    call s:pos_pattern(pattern, range, a:cmdl.cmd.args.delimiter, 0)
   endif
 endfunction
 
 function! s:preview_sort(cmdl) abort
   if empty(a:cmdl.range.specifier) && has_key(a:cmdl.cmd.args, 'pattern')
-    call s:highlight('TracesSearch', a:cmdl.cmd.args.pattern, 101)
-    call s:pos_pattern(a:cmdl.cmd.args.pattern, a:cmdl.range.abs, a:cmdl.cmd.args.delimiter, 0)
+    let pattern = a:cmdl.cmd.args.pattern
+    let range = a:cmdl.range.abs
+    call s:highlight('TracesSearch', s:add_hl_guard(pattern, range, 'g'), 101)
+    call s:pos_pattern(pattern, range, a:cmdl.cmd.args.delimiter, 0)
   endif
 endfunction
 
 function! s:cmdl_enter(view) abort
   let s:buf[s:nr] = {}
+  let s:buf[s:nr].cache = {}
   let s:buf[s:nr].view = winsaveview()
   let s:buf[s:nr].show_range = 0
   let s:buf[s:nr].duration = 0
@@ -799,7 +855,7 @@ function! s:evaluate_cmdl(string) abort
   let cmdl.range.abs       = r.range
   let cmdl.range.end       = r.end
   let cmdl.range.pattern   = s:get_selection_regexp(r.range)
-  let cmdl.range.specifier = s:add_flags(r.pattern, cmdl, 3)
+  let cmdl.range.specifier = s:add_hl_guard(s:add_opt(r.pattern, cmdl), r.end, 'r')
 
   let cmdl.cmd             = {}
   let cmdl.cmd.args        = {}
@@ -834,17 +890,13 @@ function! s:save_undo_history() abort
     let s:buf[s:nr].undo_file = 1
     return
   endif
-
   let s:buf[s:nr].undo_file = tempname()
-  let start_time = reltime()
+  let time = reltime()
   noautocmd silent execute 'wundo ' . s:buf[s:nr].undo_file
+  let s:wundo_time = reltimefloat(reltime(time)) * 1000
   if !filereadable(s:buf[s:nr].undo_file)
     let s:buf[s:nr].undo_file = 0
     return
-  endif
-  if (reltimefloat(reltime(start_time)) * 1000) > s:timeout
-    call delete(s:buf[s:nr].undo_file)
-    let s:buf[s:nr].undo_file = 0
   endif
 endfunction
 
@@ -879,8 +931,8 @@ function! s:restore_undo_history() abort
   call delete(s:buf[s:nr].undo_file)
 endfunction
 
-function! s:adjust_cmdheight(cmdl) abort
-  let len = strwidth(strtrans(a:cmdl)) + 2
+function! s:adjust_cmdheight() abort
+  let len = strwidth(strtrans(getcmdline())) + 2
   let col = &columns
   let height = &cmdheight
   if col * height < len
@@ -955,6 +1007,7 @@ function! traces#init(cmdl, view) abort
   let s:moved       = 0
   let s:last_pattern = @/
   let s:specifier_delimiter = 0
+  let s:wundo_time = 0
 
   if s:buf[s:nr].duration < s:timeout
     let start_time = reltime()
@@ -968,9 +1021,9 @@ function! traces#init(cmdl, view) abort
     call s:restore_marks()
     call winrestview(view)
   endif
-  let cmdl = s:evaluate_cmdl([s:skip_modifiers(a:cmdl)])
 
   if s:buf[s:nr].duration < s:timeout
+    let cmdl = s:evaluate_cmdl([s:skip_modifiers(a:cmdl)])
     " range preview
     if (!empty(cmdl.cmd.name) && !empty(cmdl.cmd.args) || s:buf[s:nr].show_range
           \ || s:specifier_delimiter && g:traces_num_range_preview)
@@ -1007,7 +1060,7 @@ function! traces#init(cmdl, view) abort
 
   " update screen if necessary
   if s:highlighted
-    call s:adjust_cmdheight(a:cmdl)
+    call s:adjust_cmdheight()
     if has('nvim')
       redraw
     else
@@ -1029,7 +1082,7 @@ function! traces#init(cmdl, view) abort
   endif
 
   if exists('start_time')
-    let s:buf[s:nr].duration = reltimefloat(reltime(start_time)) * 1000
+    let s:buf[s:nr].duration = reltimefloat(reltime(start_time)) * 1000 - s:wundo_time
   endif
 endfunction
 

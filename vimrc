@@ -772,7 +772,7 @@ command! Sna setlocal nopaste
 inoremap jk <Esc>`^| "doesn't work in terminal vim (see "Terminal Vim Settings" section)
 nnoremap <Leader>vv :e $MYVIMRC<CR>
 nnoremap <Leader>sv :source $MYVIMRC<CR>
-nnoremap <C-]> <NOP>
+nnoremap <C-]> :silent! tag <C-r><C-w><CR>
 command! W execute 'silent! w !sudo tee "%" > /dev/null' <bar> edit!
 "{{{ Saner Defaults
 "Disable uncommonly used Ex mode, bind Q to something more useful
@@ -923,6 +923,29 @@ noremap x "_x
 nnoremap c "_c
 nnoremap C "_C
 nnoremap D "_D
+function! AutoSaveWinView()
+  if !exists("w:SavedBufView")
+    let w:SavedBufView = {}
+  endif
+  let w:SavedBufView[bufnr("%")] = winsaveview()
+endfunction
+" Restore current view settings.
+function! AutoRestoreWinView()
+  let buf = bufnr("%")
+  if exists("w:SavedBufView") && has_key(w:SavedBufView, buf)
+    let v = winsaveview()
+    let atStartOfFile = v.lnum == 1 && v.col == 0
+    if atStartOfFile && !&diff
+      call winrestview(w:SavedBufView[buf])
+    endif
+    unlet w:SavedBufView[buf]
+  endif
+endfunction
+" When switching buffers, preserve window view.
+if v:version >= 700
+    autocmd BufLeave * call AutoSaveWinView()
+    autocmd BufEnter * call AutoRestoreWinView()
+endif
 "}}}
 "{{{ Wildmenu Macros
 nnoremap <M-e> :e<Space><C-z>
@@ -1041,7 +1064,7 @@ inoremap <M-b> <S-Left>
 inoremap <C-a> <C-c>I
 inoremap <C-e> <End>
 "forward delete, backward delete & character delete
-inoremap <M-d> <C-g>u<C-c>vec<C-g>u
+inoremap <M-d> <C-g>u<C-c>`^vec<C-g>u
 inoremap <M-BS> <C-g>u<C-w><C-g>u
 inoremap <C-BS> <C-g>u<C-w><C-g>u
 inoremap <C-w> <C-g>u<C-w><C-g>u
@@ -1223,7 +1246,7 @@ syn match UrlNoSpell '\w\+:\/\/[^[:space:]]\+' contains=@NoSpell
 " Also will not count acronym with 's' at the end a spelling error
 " Also will not count numbers that are part of this
 " Recognizes the following as correct:
-syn match AcronymNoSpell '\<\(\u\|\d\)\{3,}s\?\>' contains=@NoSpell
+syn match AcronymNoSpell '\<\(\u\|\d\)\{2,}s\?\>' contains=@NoSpell
 "}}}
 
 " Set swap & undo file directory
@@ -1246,7 +1269,7 @@ function! MyHighlights() abort
   if has('gui_running') && g:colors_name == 'onedark'
     hi VertSplit cterm=none ctermfg=103 ctermbg=none gui=none guifg=#5C6370 guibg=bg
     hi EndOfBuffer ctermfg=16 guifg=bg
-    hi StatusLine   ctermfg=233  ctermbg=103 cterm=bold gui=bold guibg=#21262d
+    hi StatusLine   ctermfg=233  ctermbg=103 cterm=bold gui=italic guibg=#08090b guifg=#ffeecd
     hi StatusLineNC ctermfg=103 ctermbg=none cterm=none,underline guibg=bg gui=underline
     hi SignColumn ctermbg=none
     hi TabLineSel cterm=bold,underline ctermbg=16 ctermfg=7 gui=bold,underline
@@ -1284,6 +1307,8 @@ function! MyHighlights() abort
     hi SignifySignChange cterm=bold ctermbg=none  ctermfg=blue
     hi CocInfoFloat ctermfg=black
   endif
+  hi! link StatusLineTerm   StatusLine
+  hi! link StatusLineTermNC StatusLineNC
 endfunction
 fun! RestoreCursorPosition() abort
   if &ft =~ 'gitcommit\|gitcommit'
@@ -1295,12 +1320,6 @@ augroup Autocommands
   autocmd!
   autocmd ColorScheme * call MyHighlights()
   autocmd BufReadPost * call RestoreCursorPosition()
-  " autocmd CmdlineEnter * setlocal cursorline
-  " autocmd CmdlineLeave * setlocal nocursorline
-  " autocmd CmdlineLeave * if bufname("") =~ "NERD_tree_\\d" | setlocal cursorline | endif
-  " autocmd CmdlineLeave * if bufname("") != "NERD_tree_\\d" | setlocal nocursorline | endif
-  " autocmd BufEnter NERD_tree_* setlocal cursorline
-  " autocmd BufLeave NERD_tree_* setlocal nocursorline
   autocmd BufNewFile,BufRead *.fish setlocal filetype=fish
   autocmd BufNewFile,BufRead *.ejs setlocal filetype=html
   autocmd BufNewFile,BufRead *.vue setlocal filetype=html
@@ -1310,7 +1329,12 @@ augroup END
 "}}}
 "{{{ GUI Vim Settings
 if has('gui_running')
-  colorscheme morning
+  if !empty(globpath(&rtp, 'colors/onedark.vim'))
+    colorscheme onedark
+  else
+    colorscheme morning
+  endif
+  set foldcolumn=1
   set laststatus=1
   set guioptions=
   set belloff=all
@@ -1604,6 +1628,13 @@ command! -nargs=? -complete=customlist,s:termnames T silent call s:term(<f-args>
 command! -nargs=? -complete=customlist,s:termnames TT silent call Term(<f-args>)
 nnoremap <C-w><C-t> :call Term()<CR>
 tnoremap <C-w><C-t> <C-\><C-n>:call Term()<CR>
+function! LsTerms()
+  redir => l:ls_ex
+  silent exec 'ls!'
+  redir END
+  echo join(filter(split(l:ls_ex, 'line \d*'), 'v:val =~# ".*term:[^/]"'), '')
+endfunction
+nnoremap <C-x><C-t> :call LsTerms()<CR>:b<Space>
 "}}}
 "{{{ Neovim :terminal Settings
 if has('nvim')
@@ -1663,7 +1694,5 @@ if !has('nvim')
   silent! tnoremap <c-q> <c-\><c-n>:bp<cr>
   silent! tnoremap <c-s> <c-\><c-n>:bn<cr>
   silent! cnoreabbrev termm term ++curwin
-  hi! link StatusLineTerm   StatusLine
-  hi! link StatusLineTermNC StatusLineNC
 endif
 "}}}
