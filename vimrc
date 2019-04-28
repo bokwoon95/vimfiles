@@ -755,6 +755,9 @@ augroup END
 autocmd! Filetype vim setlocal foldmethod=marker ts=2 sts=2 sw=2 et
 command! GMS /^<<<<<<< .*$\|^>>>>>>> .*$\|^=======$
 set foldtext=repeat('\ ',indent(v:foldstart)).foldtext()
+if has("patch-8.1.0360")
+  set diffopt+=hiddenoff,internal,algorithm:patience,iwhiteall
+endif
 
 " Survival Pack
 noremap <C-j> 5gj
@@ -1306,6 +1309,7 @@ function! MyHighlights() abort
     hi ColorColumn ctermbg=234 guibg=grey85
     hi SpecialKey term=bold ctermfg=237 guifg=Grey70
     hi Whitespace term=bold ctermfg=237 guifg=Grey70
+    hi FoldColumn ctermbg=none ctermfg=4
     " Plugins
     hi ALEErrorLine cterm=bold,underline
     hi SignifySignAdd    cterm=bold ctermbg=none  ctermfg=green
@@ -1365,6 +1369,7 @@ endif
 "{{{ Terminal Vim Settings
 if !has("gui_running")
   colorscheme default
+  set foldcolumn=1
   set background=light
   if has('nvim')
     set guicursor=n-v-c:block,i-ci-ve:ver25,r-cr:hor20,o:hor50
@@ -1386,6 +1391,7 @@ if !has("gui_running") && executable("clip.exe")
   xnoremap Y :call system('clip.exe', GetSelectedText())<CR>
   nnoremap YY "xyy:call system('clip.exe', GetSelectedText())<CR>
   nnoremap Y& m`^"xyg$``:call system('clip.exe', GetSelectedText())<CR>
+  nnoremap YL m`"xyg$``:call system('clip.exe', GetSelectedText())<CR>
 endif
 "}}}
 "{{{ Statusline Settings statsett
