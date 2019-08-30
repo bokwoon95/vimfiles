@@ -3,10 +3,12 @@ collections/
 collections/recursive/
 compat/
 date/
+dict/
 digest/
 file/
 function/uniquify/
 fs/paths/split/
+join/
 list/
 list/lcs/
 list/pattern/
@@ -15,6 +17,7 @@ list/split/
 lists/
 lnum/
 matches/
+range/sort/
 regexp/
 regexp/capture/
 regexp/collection/

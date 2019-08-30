@@ -362,6 +362,22 @@ function! ingo#collections#numsort( i1, i2, ... )
     return l:i1 == l:i2 ? 0 : l:i1 > l:i2 ? 1 : -1
 endfunction
 
+function! ingo#collections#FileModificationTimeSort( i1, i2 )
+"******************************************************************************
+"* PURPOSE:
+"   Sort by modification time (|getftime()|); recently modifified files first.
+"* ASSUMPTIONS / PRECONDITIONS:
+"   None.
+"* EFFECTS / POSTCONDITIONS:
+"   None.
+"* INPUTS:
+"   i1, i2  Elements (assumed to be existing filespecs).
+"* RETURN VALUES:
+"   -1, 0 or 1, as specified by the sort() function.
+"******************************************************************************
+    return -1 * ingo#collections#memoized#Mapsort('getftime(v:val)', a:i1, a:i2, {'cacheTimeInSeconds': 10})
+endfunction
+
 function! ingo#collections#mapsort( string, i1, i2 )
 "******************************************************************************
 "* PURPOSE:
@@ -431,6 +447,12 @@ function! ingo#collections#SortOnOneListElement( index, l1, l2, ... )
     let l:i1 = get(a:l1, a:index, l:defaultValue)
     let l:i2 = get(a:l2, a:index, l:defaultValue)
     return (l:i1 ==# l:i2 ? 0 : l:i1 ># l:i2 ? 1 : -1)
+endfunction
+function! ingo#collections#SortOnFirstListElement( l1, l2 ) abort
+    return ingo#collections#SortOnOneListElement(0, a:l1, a:l2)
+endfunction
+function! ingo#collections#SortOnSecondListElement( l1, l2 ) abort
+    return ingo#collections#SortOnOneListElement(1, a:l1, a:l2)
 endfunction
 
 function! ingo#collections#Flatten1( list )

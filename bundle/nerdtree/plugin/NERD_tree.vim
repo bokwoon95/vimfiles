@@ -14,8 +14,8 @@
 if exists("loaded_nerd_tree")
     finish
 endif
-if v:version < 700
-    echoerr "NERDTree: this plugin requires vim >= 7. DOWNLOAD IT! You'll thank me later!"
+if v:version < 703
+    echoerr "NERDTree: this plugin requires vim >= 7.3. DOWNLOAD IT! You'll thank me later!"
     finish
 endif
 let loaded_nerd_tree = 1
@@ -77,6 +77,7 @@ else
     call s:initVariable("g:NERDTreeDirArrowExpandable", "+")
     call s:initVariable("g:NERDTreeDirArrowCollapsible", "~")
 endif
+
 call s:initVariable("g:NERDTreeCascadeOpenSingleChildDir", 1)
 call s:initVariable("g:NERDTreeCascadeSingleChildDir", 1)
 
@@ -120,6 +121,7 @@ endif
 
 
 "SECTION: Init variable calls for key mappings {{{2
+call s:initVariable("g:NERDTreeMapCustomOpen", "<CR>")
 call s:initVariable("g:NERDTreeMapActivateNode", "o")
 call s:initVariable("g:NERDTreeMapChangeRoot", "C")
 call s:initVariable("g:NERDTreeMapChdir", "cd")
