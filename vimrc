@@ -2,8 +2,9 @@
 silent! set encoding=utf-8
 silent! scriptencoding utf-8
 silent! set fileencoding=utf-8
-if !empty(glob('~/vimfiles/autoload/pathogen.vim')) || !empty(glob('~/.vim/autoload/pathogen.vim'))
-  silent! execute pathogen#infect()
+if !empty(glob('~/vimfiles/autoload/pathogen.vim'))
+  silent! source ~/vimfiles/autoload/pathogen.vim
+  silent! execute pathogen#infect('~/vimfiles/bundle/{}')
   syntax on
   filetype plugin indent on
 else
