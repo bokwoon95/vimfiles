@@ -714,6 +714,19 @@ nnoremap <expr> <C-c><C-g> sy#repo#get_stats() != [-1,-1,-1] ?
             \": ":silent! diffoff! \| silent! tabclose<CR>
             \": ""
 "}}}
+"{{{ vim-go
+let g:go_fmt_command = "goimports"
+let g:go_fmt_fail_silently = 1
+let g:go_info_mode = 'gopls'
+let g:go_def_mode = 'gopls'
+" vim-go highlights
+let g:go_highlight_extra_types = 1
+let g:go_highlight_functions = 1
+let g:go_highlight_function_arguments = 1
+let g:go_highlight_function_calls = 1
+let g:go_highlight_types = 1
+let g:go_fmt_autosave = 0
+"}}}
 "}}}
 
 syntax enable
