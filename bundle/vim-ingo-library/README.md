@@ -131,7 +131,21 @@ https://github.com/inkarkat/vim-ingo-library/issues or email (address below).
 HISTORY
 ------------------------------------------------------------------------------
 
-##### 1.039   RELEASEME
+##### 1.041   RELEASEME
+- Add ingo/register/pending.vim module.
+
+##### 1.040   31-Oct-2019
+- Add ingo#str#TrimTrailing() variant of ingo#str#Trim().
+- Add ingo#date#format#FilesystemCompatibleTimestamp() variant.
+- Add ingo#window#quickfix#SetOtherList() generalization of
+  ingo#window#quickfix#SetList().
+- Add ingo#window#quickfix#GetName() and ingo#window#quickfix#GetPrefix().
+- Add ingo#plugin#cmdcomplete#MakeFirstArgumentFixedListCompleteFunc() variant
+  of ingo#plugin#cmdcomplete#MakeFixedListCompleteFunc().
+- Add ingo#change#virtcols#Get(), a variant of ingo#selection#virtcols#Get().
+- Add ingo/plugin/register.vim module.
+
+##### 1.039   10-Sep-2019
 - Add ingo#date#format#Epoch().
 - Add ingo#collections#SortOnFirstListElement() and
   ingo#collections#SortOnSecondListElement().
@@ -174,6 +188,7 @@ HISTORY
   ingo#actions#EvaluateWithValOrFunc().
 - ENH: ingo#cmdrangeconverter#LineToBufferRange(): Also allow Funcref argument
   for a function that takes the converted range.
+- Add ingo/options/listchars.vim module.
 
 ##### 1.038   09-Jun-2019
 - ingo#compat#maparg() escaping didn't consider &lt;; in fact, it needs to escape

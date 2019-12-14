@@ -74,12 +74,11 @@ endfunction
 function! s:ActionSetup(fn)
   let s:encode_fn = a:fn
   let &opfunc = matchstr(expand('<sfile>'), '<SNR>\d\+_').'ActionOpfunc'
-  return 'g@'
 endfunction
 
 function! s:MapAction(fn, keys)
-  exe 'nnoremap <expr> <Plug>Caser'.a:fn.' <SID>ActionSetup("'.a:fn.'")'
-  exe 'xnoremap <expr> <Plug>CaserV'.a:fn.' <SID>DoAction("'.a:fn.'",visualmode())'
+  exe 'nnoremap <silent> <Plug>Caser'.a:fn.' :<C-U>call <SID>ActionSetup("'.a:fn.'")<CR>g@'
+  exe 'xnoremap <silent> <Plug>CaserV'.a:fn.' :<C-U>call <SID>DoAction("'.a:fn.'",visualmode())<CR>'
 
   if !exists('g:caser_no_mappings') || !g:caser_no_mappings
     for key in a:keys
@@ -99,4 +98,5 @@ call s:MapAction('TitleCase', ['t'])
 call s:MapAction('SentenceCase', ['s'])
 call s:MapAction('SpaceCase', ['<space>'])
 call s:MapAction('KebabCase', ['k', '-'])
+call s:MapAction('TitleKebabCase', ['K'])
 call s:MapAction('DotCase', ['.'])

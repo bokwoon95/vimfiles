@@ -1,8 +1,8 @@
-" vim: et sw=2 sts=2
+" vim: et sw=2 sts=2 fdm=marker
 
 scriptencoding utf-8
 
-" Function: #escape {{{1
+" #escape {{{1
 function! sy#util#escape(path) abort
   if exists('+shellslash')
     let old_ssl = &shellslash
@@ -22,7 +22,7 @@ function! sy#util#escape(path) abort
   return path
 endfunction
 
-" Function: #refresh_windows {{{1
+" #refresh_windows {{{1
 function! sy#util#refresh_windows() abort
   if exists('*win_getid')
     let winid = win_getid()
@@ -31,7 +31,9 @@ function! sy#util#refresh_windows() abort
   endif
 
   if !get(g:, 'signify_cmdwin_active')
-    keepjumps windo if exists('b:sy') | call sy#start() | endif
+    for bufnr in tabpagebuflist()
+      call sy#start({'bufnr': bufnr})
+    endfor
   endif
 
   if exists('winid')
@@ -41,7 +43,7 @@ function! sy#util#refresh_windows() abort
   endif
 endfunction
 
-" Function: #hunk_text_object {{{1
+" #hunk_text_object {{{1
 function! sy#util#hunk_text_object(emptylines) abort
   execute sy#util#return_if_no_changes()
 
@@ -67,7 +69,7 @@ function! sy#util#hunk_text_object(emptylines) abort
   endif
 endfunction
 
-" Function: #shell_redirect {{{1
+" #shell_redirect {{{1
 function! sy#util#shell_redirect(path) abort
   " if shellredir contains a %s it is replaced with the path
   " otherwise, just append it (from :help shellredir:
@@ -81,7 +83,7 @@ function! sy#util#shell_redirect(path) abort
   endif
 endfunction
 
-" Function: #chdir {{{1
+" #chdir {{{1
 function! sy#util#chdir() abort
   let chdir = haslocaldir()
         \ ? 'lcd'
@@ -89,7 +91,7 @@ function! sy#util#chdir() abort
   return [getcwd(), chdir]
 endfunction
 
-" Function: #has_changes {{{1
+" #return_if_no_changes {{{1
 function! sy#util#return_if_no_changes() abort
   if !exists('b:sy') || empty(b:sy.hunks)
     echomsg 'signify: There are no changes.'
@@ -98,7 +100,7 @@ function! sy#util#return_if_no_changes() abort
   return ''
 endfunction
 
-" Function: #execute {{{1
+" #execute {{{1
 function! sy#util#execute(cmd) abort
   let lang = v:lang
   redir => output
@@ -110,7 +112,7 @@ endfunction
 
 let s:popup_window = 0
 
-" Function: #popup_close {{{1
+" #popup_close {{{1
 function! sy#util#popup_close() abort
   if s:popup_window
     call nvim_win_close(s:popup_window, 1)
@@ -118,7 +120,7 @@ function! sy#util#popup_close() abort
   endif
 endfunction
 
-" Function: #popup_create {{{1
+" #popup_create {{{1
 function! sy#util#popup_create(hunkdiff) abort
   let offset      = s:offset()
   let winline     = winline()
@@ -136,16 +138,18 @@ function! sy#util#popup_create(hunkdiff) abort
     let height  += scroll
   endif
 
+  let padding = repeat(' ', offset - 1)
+
   if exists('*nvim_open_win')
     call sy#util#popup_close()
     let buf = nvim_create_buf(0, 1)
     call nvim_buf_set_option(buf, 'syntax', 'diff')
-    call nvim_buf_set_lines(buf, 0, -1, 0, a:hunkdiff)
+    call nvim_buf_set_lines(buf, 0, -1, 0, map(a:hunkdiff, 'v:val[0].padding.v:val[1:]'))
     let s:popup_window = nvim_open_win(buf, v:false, {
           \ 'relative': 'win',
           \ 'row': winline,
-          \ 'col': offset - 1,
-          \ 'width': winwidth('%') - offset + 1,
+          \ 'col': 0,
+          \ 'width': winwidth('%'),
           \ 'height': height,
           \ })
     call nvim_win_set_option(s:popup_window, 'cursorline', v:false)
@@ -156,9 +160,9 @@ function! sy#util#popup_create(hunkdiff) abort
     call nvim_win_set_option(s:popup_window, 'wrap', v:true)
     autocmd CursorMoved * ++once call sy#util#popup_close()
   elseif exists('*popup_create')
-    let s:popup_window = popup_create(a:hunkdiff, {
+    let s:popup_window = popup_create(map(a:hunkdiff, 'v:val[0].padding.v:val[1:]'), {
           \ 'line': 'cursor+1',
-          \ 'col': offset,
+          \ 'col': 0,
           \ 'minwidth': winwidth('%'),
           \ 'maxheight': height,
           \ 'moved': 'any',
@@ -172,7 +176,7 @@ function! sy#util#popup_create(hunkdiff) abort
   return 1
 endfunction
 
-" Function: s:offset {{{1
+" s:offset {{{1
 function! s:offset() abort
   let offset = &foldcolumn
   let offset += 2  " FIXME: Find better way to calculate the sign column width.

@@ -37,8 +37,7 @@ function! s:parse_range(range, cmdl) abort
     " regexp for pattern specifier
     let pattern = '/%(\\.|/@!&.)*/=|\?%(\\.|\?@!&.)*\?='
     if !len(specifier.addresses)
-      " \& is not supported
-      let address = matchstrpos(a:cmdl[0], '\v^%(\d+|\.|\$|\%|\*|''.|'. pattern . '|\\\/|\\\?)')
+      let address = matchstrpos(a:cmdl[0], '\v^%(\d+|\.|\$|\%|\*|''.|'. pattern . '|\\\/|\\\?|\\\&)')
     else
       let address = matchstrpos(a:cmdl[0], '\v^%(' . pattern . ')' )
     endif
@@ -248,6 +247,16 @@ function! s:address_to_num(address, last_pos) abort
     let query = s:search([s:last_pattern, 'nb', 0, s:s_timeout], a:last_pos, 1)
     if !query | let result.valid = 0 | endif
     call add(result.range, query)
+    let s:buf[s:nr].show_range = 1
+
+  elseif a:address.str ==# '\&'
+    call cursor(a:last_pos, 1)
+    try
+      noautocmd keeppatterns keepjumps silent \&
+    catch
+      let result.valid = 0
+    endtry
+    call add(result.range, getpos('.')[1])
     let s:buf[s:nr].show_range = 1
   endif
 
@@ -609,7 +618,9 @@ function! s:highlight(group, pattern, priority) abort
 
   " add matches
   for id in windows
-    noautocmd call win_gotoid(id)
+    if empty(getcmdwintype())
+      noautocmd call win_gotoid(id)
+    endif
     let win = s:buf[s:nr].win[id]
     let win.matches = get(win, 'matches', {})
     if !exists('win.matches[a:group]')
@@ -628,7 +639,9 @@ function! s:highlight(group, pattern, priority) abort
     endif
   endfor
 
-  noautocmd call win_gotoid(s:buf[s:nr].cur_win)
+  if empty(getcmdwintype())
+    noautocmd call win_gotoid(s:buf[s:nr].cur_win)
+  endif
 endfunction
 
 function! s:format_command(cmdl) abort
@@ -761,7 +774,6 @@ function! s:cmdl_enter(view) abort
   let s:buf[s:nr].cmdheight = &cmdheight
   let s:buf[s:nr].redraw = 1
   let s:buf[s:nr].s_mark = (&encoding == 'utf-8' ? "\uf8b4" : '' )
-  let s:buf[s:nr].winrestcmd = winrestcmd()
   let s:buf[s:nr].cur_win = win_getid()
   let s:buf[s:nr].alt_win = win_getid(winnr('#'))
   let s:buf[s:nr].winwidth = &winwidth
@@ -781,16 +793,20 @@ function! traces#cmdl_leave() abort
 
   " clear highlights
   for id in keys(s:buf[s:nr].win)
-    noautocmd call win_gotoid(id)
+    if empty(getcmdwintype())
+      noautocmd call win_gotoid(id)
+    endif
     for group in keys(get(s:buf[s:nr].win[id], 'matches', {}))
       silent! call matchdelete(s:buf[s:nr].win[id].matches[group].match_id)
     endfor
   endfor
 
   " restore previous window <c-w>p
-  if bufname('%') !=# '[Command Line]'
+  if empty(getcmdwintype())
+    let winrestcmd = winrestcmd()
     noautocmd call win_gotoid(s:buf[s:nr].alt_win)
     noautocmd call win_gotoid(s:buf[s:nr].cur_win)
+    execute winrestcmd
   endif
 
   " restore local options
@@ -814,9 +830,6 @@ function! traces#cmdl_leave() abort
     noautocmd let &winheight = s:buf[s:nr].winheight
   endif
 
-  if winrestcmd() isnot s:buf[s:nr].winrestcmd
-    noautocmd execute s:buf[s:nr].winrestcmd
-  endif
   if winsaveview() !=# s:buf[s:nr].view
     call winrestview(s:buf[s:nr].view)
   endif
@@ -863,7 +876,7 @@ function! s:save_undo_history() abort
   if exists('s:buf[s:nr].undo_file')
     return
   endif
-  if bufname('%') ==# '[Command Line]' || s:buf[s:nr].empty_undotree
+  if !empty(getcmdwintype()) || s:buf[s:nr].empty_undotree
     let s:buf[s:nr].undo_file = 1
     return
   endif
